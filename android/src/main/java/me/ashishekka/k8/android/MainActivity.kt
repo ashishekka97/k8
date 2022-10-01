@@ -6,9 +6,11 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
@@ -50,12 +52,13 @@ fun MainLayout(chip8: Chip8) {
         topBar = { TopAppBar(title = { Text("K8 (Kate)") }) },
     ) {
         Column(
-            modifier = Modifier.padding(it).fillMaxHeight(),
-            verticalArrangement = Arrangement.SpaceEvenly,
+            modifier = Modifier.fillMaxHeight().padding(it),
+            verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             val videoMemory = chip8.getVideoMemoryState()
-            Screen(videoMemory.value)
+            Row { Screen(videoMemory.value) }
+            Row { Keypad(chip8) }
         }
     }
 }
@@ -74,5 +77,45 @@ fun Screen(videoMemory: VideoMemory) {
                 }
             }
         }
+    }
+}
+
+@Composable
+fun Keypad(chip8: Chip8) {
+    Column() {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            Key(1)
+            Key(2)
+            Key(3)
+            Key(12)
+        }
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            Key(4)
+            Key(5)
+            Key(6)
+            Key(13)
+        }
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            Key(7)
+            Key(8)
+            Key(9)
+            Key(14)
+        }
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            Key(10)
+            Key(0)
+            Key(11)
+            Key(15)
+        }
+    }
+}
+
+@Composable
+fun Key(number: Int) {
+    Button(onClick = { }) {
+        Text(
+            text = "${number.toUInt().toString(16).toUpperCase()}",
+            style = MaterialTheme.typography.h6
+        )
     }
 }
