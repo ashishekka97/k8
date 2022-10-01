@@ -21,19 +21,9 @@ interface Chip8 {
     fun start()
 
     /**
-     * Expose the VRAM updates as flow
-     */
-    fun getVideoMemoryFlow(): Flow<VideoMemory>
-
-    /**
      * Expose the VRAM updates as State
      */
     fun getVideoMemoryState(): State<VideoMemory>
-
-    /**
-     * Set VRAM state change callback
-     */
-    fun setDisplayCallback(displayCallback: (VideoMemory) -> Unit)
 
     /**
      * Expose running state
@@ -52,13 +42,11 @@ class Chip8Impl(romBytes: ByteArray? = null) : Chip8 {
     private val videoMemory = VideoMemory(32) { BooleanArray(64) }
     private val cpu: Cpu
 
-    private val videoMemoryState = mutableStateOf(videoMemory)
-    private val videoMemoryFlow = MutableStateFlow(videoMemory)
-    private var videoMemoryCallback: ((VideoMemory) -> Unit)? = null
+    private val videoMemoryState = mutableStateOf(VideoMemory(32) { BooleanArray(64) })
 
     init {
         cpu = Cpu(memory, videoMemory) {
-            videoMemoryCallback?.invoke(it)
+            videoMemoryState.value = it
         }
         if (romBytes != null) {
             loadRom(romBytes)
@@ -82,16 +70,8 @@ class Chip8Impl(romBytes: ByteArray? = null) : Chip8 {
         }
     }
 
-    override fun getVideoMemoryFlow(): Flow<VideoMemory> {
-        return videoMemoryFlow
-    }
-
     override fun getVideoMemoryState(): State<VideoMemory> {
         return videoMemoryState
-    }
-
-    override fun setDisplayCallback(displayCallback: (VideoMemory) -> Unit) {
-        videoMemoryCallback = displayCallback
     }
 
     override fun isRunning(): Boolean {

@@ -20,6 +20,7 @@ fun Triple<ByteStore, ByteStore, ByteStore>.toByteStore() = ((y().toUInt() shl 4
 
 fun Triple<ByteStore, ByteStore, ByteStore>.toInt() = (x().toInt() shl 8) or (y().toInt() shl 4) or n().toInt()
 
+fun Triple<ByteStore, ByteStore, ByteStore>.toWordStore() = toInt().toUShort()
 
 fun ByteStore.lowerNibble(): ByteStore {
     return (this and 0x0Fu)
