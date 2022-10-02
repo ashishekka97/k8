@@ -2,11 +2,9 @@ package me.ashishekka.k8.core
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 interface Chip8 {
@@ -26,26 +24,39 @@ interface Chip8 {
     fun getVideoMemoryState(): State<VideoMemory>
 
     /**
+     * Expose the sound updates as State
+     */
+    fun getSoundState(): State<Boolean>
+
+    /**
      * Expose running state
      */
     fun isRunning(): Boolean
+
+    /**
+     * Register keypad input
+     */
+    fun onKey(key: Int, type: KeyEventType)
 }
 
-class Chip8Impl(romBytes: ByteArray? = null) : Chip8 {
+class Chip8Impl(private val scope: CoroutineScope, romBytes: ByteArray? = null) : Chip8 {
 
     private val cpuClockHz: Long = 1000
-
-    private val scope = MainScope()
     private var cpuClockJob: Job? = null
+    private var timerJob: Job? = null
 
     private val memory = Memory(4096) { 0u }
     private val videoMemory = VideoMemory(32) { BooleanArray(64) }
     private val cpu: Cpu
 
     private val videoMemoryState = mutableStateOf(VideoMemory(32) { BooleanArray(64) })
+    private val soundState = mutableStateOf(false)
+
+    private val keypad = KeypadImpl(scope)
 
     init {
-        cpu = Cpu(memory, videoMemory) {
+        cpu = Cpu(memory, videoMemory, keypad) {
+            print(it.print())
             videoMemoryState.value = it
         }
         if (romBytes != null) {
@@ -66,15 +77,42 @@ class Chip8Impl(romBytes: ByteArray? = null) : Chip8 {
             while (true) {
                 delay(1000 / cpuClockHz)
                 cpu.tick()
+                videoMemoryState.value = videoMemory
+            }
+        }
+
+        timerJob = scope.launch {
+            while (true) {
+                delay(16)
+                if (cpu.DT > 0u) {
+                    cpu.DT--
+                }
+                if (cpu.ST > 0u)  {
+                    cpu.ST--
+                    soundState.value = true
+                } else {
+                    soundState.value = false
+                }
             }
         }
     }
 
-    override fun getVideoMemoryState(): State<VideoMemory> {
+    override fun getVideoMemoryState(): State<Array<BooleanArray>> {
         return videoMemoryState
+    }
+
+    override fun getSoundState(): State<Boolean> {
+        return soundState
     }
 
     override fun isRunning(): Boolean {
         return cpuClockJob?.isActive == true
+    }
+
+    override fun onKey(key: Int, type: KeyEventType) {
+        when (type) {
+            KeyEventType.CLICK -> keypad.onKeyClick(key)
+            KeyEventType.LONG -> keypad.onKeyLongPress(key)
+        }
     }
 }

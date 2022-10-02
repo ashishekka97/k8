@@ -41,7 +41,11 @@ fun VideoMemory.print(): String {
     forEach { rowData ->
         sb.append("\n")
         rowData.forEach { colData ->
-            if (colData) sb.append(" ■ ") else sb.append(" □ ")
+            if (colData) {
+                sb.append("■■")
+            } else {
+                sb.append("  ")
+            }
         }
     }
     return sb.toString()

@@ -8,6 +8,7 @@ const val FONT_START = 0x050
 class Cpu(
     private val memory: Memory = Memory(4096) { 0u },
     private val videoMemory: VideoMemory = VideoMemory(32) { BooleanArray(64) },
+    private val keypad: Keypad,
     private val inCommonMode: Boolean = true,
     private val onDrawn: ((VideoMemory) -> Unit)? = null
 ) {
@@ -28,9 +29,6 @@ class Cpu(
 
     // 16 8-bit General purpose variable registers
     val V = Array<ByteStore>(16) { 0u }
-
-    private var lastKey: ByteStore? = null
-    private val key: ByteStore? = null
 
     private val instructionSet: InstructionSet
 
@@ -209,8 +207,8 @@ class Cpu(
     fun skipKey(operands: Operands) {
         val x = operands.x().toInt()
         val result = when (operands.toWordStore().toInt()) {
-            0x9E -> V[x] == key
-            0xA1 -> V[x] != key
+            0x9E -> V[x] == keypad.currentKey
+            0xA1 -> V[x] != keypad.currentKey
             else -> false
         }
         if (result) PC += 2
@@ -222,6 +220,7 @@ class Cpu(
             0x07 -> V[x] = DT
             0x0A -> {
                 // TODO Handle OG (non-modern) case
+                val key = keypad.currentKey
                 if (key == null) {
                     // Halt fetch-decode-execute to wait for the key press
                     PC -= 2
