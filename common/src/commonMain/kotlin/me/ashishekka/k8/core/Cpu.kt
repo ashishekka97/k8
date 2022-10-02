@@ -8,7 +8,7 @@ const val FONT_START = 0x050
 class Cpu(
     private val memory: Memory = Memory(4096) { 0u },
     private val videoMemory: VideoMemory = VideoMemory(32) { BooleanArray(64) },
-    private val isModern: Boolean = true,
+    private val inCommonMode: Boolean = true,
     private val onDrawn: ((VideoMemory) -> Unit)? = null
 ) {
     // Program counter, starts at 0x200
@@ -131,37 +131,37 @@ class Cpu(
     fun arithmetics(operands: Operands) {
         val (x, y, n) = Triple(operands.x().toInt(), operands.y().toInt(), operands.n().toInt())
         when (n) {
-            0 -> V[x] = V[y]
-            1 -> V[x] = V[x] or V[y]
-            2 -> V[x] = V[x] and V[y]
-            3 -> V[x] = V[x] xor V[y]
-            4 -> {
+            0x0 -> V[x] = V[y]
+            0x1 -> V[x] = V[x] or V[y]
+            0x2 -> V[x] = V[x] and V[y]
+            0x3 -> V[x] = V[x] xor V[y]
+            0x4 -> {
                 val result = V[x].toInt() + V[y].toInt()
                 V[0xF] = if (result > 0xFF) 1u else 0u
                 V[x] = result.toUByte()
             }
-            5 -> {
+            0x5 -> {
                 val result = V[x].toInt() - V[y].toInt()
                 V[0xF] = if (result < 0) 0u else 1u
                 V[x] = result.toUByte()
             }
-            6 -> {
-                if (!isModern) {
+            0x6 -> {
+                if (!inCommonMode) {
                     V[x] = V[y]
                 }
-                V[0xF] = (V[x] % 2u).toByteStore()
+                V[0xF] = (V[x] and 0x01u)
                 V[x] = (V[x].toInt() shr 1).toUByte()
             }
-            7 -> {
+            0x7 -> {
                 val result = V[y].toInt() - V[x].toInt()
                 V[0xF] = if (result < 0) 0u else 1u
                 V[x] = result.toUByte()
             }
             0xE -> {
-                if (!isModern) {
+                if (!inCommonMode) {
                     V[x] = V[y]
                 }
-                V[0xF] = (V[x] % 2u).toByteStore()
+                V[0xF] = (V[x].toInt() shr 7).toUByte()
                 V[x] = (V[x].toInt() shl 1).toUByte()
             }
         }
@@ -178,7 +178,7 @@ class Cpu(
     }
 
     fun jmpOff(operands: Operands) {
-        val plusHend = if (isModern) V[operands.x().toInt()] else V[0]
+        val plusHend = if (inCommonMode) V[0] else V[operands.x().toInt()]
         PC = operands.toInt() + plusHend.toInt()
     }
 
@@ -233,10 +233,8 @@ class Cpu(
             0x18 -> ST = V[x]
             0x1E -> {
                 val result = V[x].toInt() + I
-                if (isModern && result > 0x0FFF) {
+                if (!inCommonMode && result > 0x0FFF) {
                     V[0xF] = 1u
-                } else {
-                    V[0xF] = 0u
                 }
                 I = result
             }
@@ -252,11 +250,10 @@ class Cpu(
 
             }
             0x55 -> {
-                if (isModern) {
+                if (inCommonMode) {
                     for (i in 0..x) {
                         memory[I + i] = V[i]
                     }
-                    I += x + 1
                 } else {
                     repeat(x) {
                         memory[I] = V[I]
@@ -265,11 +262,10 @@ class Cpu(
                 }
             }
             0x65 -> {
-                if (isModern) {
+                if (inCommonMode) {
                     for (i in 0..x) {
                         V[i] = memory[I + i]
                     }
-                    I += x + 1
                 } else {
                     repeat(x) {
                         V[I] = memory[I]

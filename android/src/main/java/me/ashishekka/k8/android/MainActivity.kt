@@ -33,7 +33,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val romFile = assets.open("test_opcode.ch8")
+        val romFile = assets.open("bc_test.ch8")
         val romData = romFile.readBytes()
         val emulator = findViewById<ComposeView>(R.id.emulator)
         chip8.loadRom(romData)
