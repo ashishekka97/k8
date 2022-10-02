@@ -51,6 +51,14 @@ fun VideoMemory.print(): String {
     return sb.toString()
 }
 
+fun VideoMemory.clear() {
+    forEachIndexed { y, row ->
+        row.forEachIndexed { x, _ ->
+            this[y][x] = false
+        }
+    }
+}
+
 fun Memory.print(): String {
     val sb = StringBuilder()
     forEachIndexed { index, uByte ->
@@ -62,4 +70,8 @@ fun Memory.print(): String {
         }
     }
     return sb.toString()
+}
+
+fun Memory.clear() {
+    indices.forEach { this[it] = 0u }
 }

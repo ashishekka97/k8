@@ -46,6 +46,15 @@ class Cpu(
         operation?.execute(firstByte, secondByte)
     }
 
+    fun reset() {
+        PC = PC_START
+        I = 0
+        stack.clear()
+        DT = 0u
+        ST = 0u
+        V.forEachIndexed { index, _ -> V[index] = 0u }
+    }
+
     private fun fetch(): Pair<ByteStore, ByteStore> {
         val firstByte = memory[PC++]
         val secondByte = memory[PC++]
@@ -68,12 +77,8 @@ class Cpu(
         }
     }
 
-    fun cls(operands: Operands) {
-        videoMemory.forEachIndexed { y, row ->
-            row.forEachIndexed { x, _ ->
-                videoMemory[y][x] = false
-            }
-        }
+    private fun cls(operands: Operands) {
+        videoMemory.clear()
         onDrawn?.invoke(videoMemory)
     }
 
@@ -83,50 +88,50 @@ class Cpu(
         }
     }
 
-    fun bin(operands: Operands) {
+    private fun bin(operands: Operands) {
         // Execute machine code. No need to emulate for now.
         PC -= 2
     }
 
-    fun jmp(operands: Operands) {
+    private fun jmp(operands: Operands) {
         PC = operands.toInt()
     }
 
-    fun func(operands: Operands) {
+    private fun func(operands: Operands) {
         stack.add(PC.toUShort())
         PC = operands.toInt() - 2
     }
 
-    fun skipXN(operands: Operands) {
+    private fun skipXN(operands: Operands) {
         if (V[operands.x().toInt()] == operands.toByteStore()) {
             PC += 2
         }
     }
 
-    fun skipXnotN(operands: Operands) {
+    private fun skipXnotN(operands: Operands) {
         if (V[operands.x().toInt()] != operands.toByteStore()) {
             PC += 2
         }
     }
 
-    fun skipXY(operands: Operands) {
+    private fun skipXY(operands: Operands) {
         if (V[operands.x().toInt()] == V[operands.y().toInt()]) {
             PC += 2
         }
     }
 
-    fun setVx(operands: Operands) {
+    private fun setVx(operands: Operands) {
         val registerIndex = operands.x().toInt()
         V[registerIndex] = operands.toByteStore()
     }
 
-    fun addVx(operands: Operands) {
+    private fun addVx(operands: Operands) {
         val registerIndex = operands.x().toInt()
         V[registerIndex] = (V[registerIndex] + operands.toByteStore()).toByteStore()
 
     }
 
-    fun arithmetics(operands: Operands) {
+    private fun arithmetics(operands: Operands) {
         val (x, y, n) = Triple(operands.x().toInt(), operands.y().toInt(), operands.n().toInt())
         when (n) {
             0x0 -> V[x] = V[y]
@@ -165,27 +170,27 @@ class Cpu(
         }
     }
 
-    fun skipXnotY(operands: Operands) {
+    private fun skipXnotY(operands: Operands) {
         if (V[operands.x().toInt()] != V[operands.y().toInt()]) {
             PC += 2
         }
     }
 
-    fun setI(operands: Operands) {
+    private fun setI(operands: Operands) {
         I = operands.toInt()
     }
 
-    fun jmpOff(operands: Operands) {
+    private fun jmpOff(operands: Operands) {
         val plusHend = if (inCommonMode) V[0] else V[operands.x().toInt()]
         PC = operands.toInt() + plusHend.toInt()
     }
 
-    fun rnd(operands: Operands) {
+    private fun rnd(operands: Operands) {
         val num = Random.nextInt()
         V[operands.x().toInt()] = num.toUByte() and operands.toByteStore()
     }
 
-    fun draw(operands: Operands) {
+    private fun draw(operands: Operands) {
         val n = operands.n().toInt()
         V[0xF] = 0u
         repeat(n) { row ->
@@ -204,7 +209,7 @@ class Cpu(
         onDrawn?.invoke(videoMemory)
     }
 
-    fun skipKey(operands: Operands) {
+    private fun skipKey(operands: Operands) {
         val x = operands.x().toInt()
         val result = when (operands.toWordStore().toInt()) {
             0x9E -> V[x] == keypad.currentKey
@@ -214,7 +219,7 @@ class Cpu(
         if (result) PC += 2
     }
 
-    fun others(operands: Operands) {
+    private fun others(operands: Operands) {
         val x = operands.x().toInt()
         when (operands.toByteStore().toInt()) {
             0x07 -> V[x] = DT

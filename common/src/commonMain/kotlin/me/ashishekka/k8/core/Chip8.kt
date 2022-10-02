@@ -2,7 +2,9 @@ package me.ashishekka.k8.core
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.neverEqualPolicy
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -17,6 +19,11 @@ interface Chip8 {
      * Starts emulation.
      */
     fun start()
+
+    /**
+     * Resets the system.
+     */
+    fun reset()
 
     /**
      * Expose the VRAM updates as State
@@ -42,6 +49,7 @@ interface Chip8 {
 class Chip8Impl(private val scope: CoroutineScope, romBytes: ByteArray? = null) : Chip8 {
 
     private val cpuClockHz: Long = 1000
+    private val timerClockHz: Long = 60
     private var cpuClockJob: Job? = null
     private var timerJob: Job? = null
 
@@ -49,14 +57,13 @@ class Chip8Impl(private val scope: CoroutineScope, romBytes: ByteArray? = null) 
     private val videoMemory = VideoMemory(32) { BooleanArray(64) }
     private val cpu: Cpu
 
-    private val videoMemoryState = mutableStateOf(VideoMemory(32) { BooleanArray(64) })
-    private val soundState = mutableStateOf(false)
+    private val videoMemoryState = mutableStateOf(VideoMemory(32) { BooleanArray(64) }, neverEqualPolicy())
+    private val soundState = mutableStateOf(false, neverEqualPolicy())
 
     private val keypad = KeypadImpl(scope)
 
     init {
         cpu = Cpu(memory, videoMemory, keypad) {
-            print(it.print())
             videoMemoryState.value = it
         }
         if (romBytes != null) {
@@ -66,6 +73,7 @@ class Chip8Impl(private val scope: CoroutineScope, romBytes: ByteArray? = null) 
 
 
     override fun loadRom(romBytes: ByteArray) {
+        reset()
         romBytes.forEachIndexed { index, byte ->
             memory[index + 0x200] = byte.toUByte()
         }
@@ -73,17 +81,16 @@ class Chip8Impl(private val scope: CoroutineScope, romBytes: ByteArray? = null) 
     }
 
     override fun start() {
-        cpuClockJob = scope.launch {
+        cpuClockJob = scope.launch(Dispatchers.Default) {
             while (true) {
                 delay(1000 / cpuClockHz)
                 cpu.tick()
-                videoMemoryState.value = videoMemory
             }
         }
 
-        timerJob = scope.launch {
+        timerJob = scope.launch(Dispatchers.Default) {
             while (true) {
-                delay(16)
+                delay(1000 / timerClockHz)
                 if (cpu.DT > 0u) {
                     cpu.DT--
                 }
@@ -95,6 +102,16 @@ class Chip8Impl(private val scope: CoroutineScope, romBytes: ByteArray? = null) 
                 }
             }
         }
+    }
+
+    override fun reset() {
+        cpuClockJob?.cancel()
+        timerJob?.cancel()
+        cpu.reset()
+        memory.clear()
+        videoMemory.clear()
+        videoMemoryState.value = videoMemory
+        soundState.value = false
     }
 
     override fun getVideoMemoryState(): State<Array<BooleanArray>> {

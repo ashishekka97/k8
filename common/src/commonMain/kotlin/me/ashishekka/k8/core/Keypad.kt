@@ -1,6 +1,7 @@
 package me.ashishekka.k8.core
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -25,7 +26,7 @@ class KeypadImpl(private val coroutineScope: CoroutineScope) : Keypad {
     override fun onKeyClick(key: Int) {
         keyResetJob?.cancel()
         this.currentKey = checkIfValidKey(key)
-        keyResetJob = coroutineScope.launch {
+        keyResetJob = coroutineScope.launch(Dispatchers.Default) {
             delay(100)
             lastKey = currentKey
             currentKey = null
@@ -35,7 +36,7 @@ class KeypadImpl(private val coroutineScope: CoroutineScope) : Keypad {
     override fun onKeyLongPress(key: Int) {
         keyResetJob?.cancel()
         this.currentKey = checkIfValidKey(key)
-        keyResetJob = coroutineScope.launch {
+        keyResetJob = coroutineScope.launch(Dispatchers.Default) {
             delay(500)
             lastKey = currentKey
             currentKey = null
