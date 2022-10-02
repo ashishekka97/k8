@@ -216,9 +216,9 @@ class Cpu(
         if (result) PC += 2
     }
 
-    fun timer(operands: Operands) {
+    fun others(operands: Operands) {
         val x = operands.x().toInt()
-        when (operands.toWordStore().toInt()) {
+        when (operands.toByteStore().toInt()) {
             0x07 -> V[x] = DT
             0x0A -> {
                 // TODO Handle OG (non-modern) case
@@ -297,7 +297,7 @@ class Cpu(
             Pair(0xCu, ::rnd),
             Pair(0xDu, ::draw),
             Pair(0xEu, ::skipKey),
-            Pair(0xFu, ::timer)
+            Pair(0xFu, ::others)
         )
     }
 }
