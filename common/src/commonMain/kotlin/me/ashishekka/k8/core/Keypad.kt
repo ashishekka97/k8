@@ -6,41 +6,38 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+const val AVERAGE_KEY_RESET_DELAY_MILLIS = 85L
+
 interface Keypad {
     var currentKey: ByteStore?
 
-    var lastKey: ByteStore?
+    var isKeyPressed: Boolean
 
-    fun onKeyClick(key: Int)
+    fun onKeyDown(key: Int)
 
-    fun onKeyLongPress(key: Int)
+    fun onKeyUp(key: Int)
 }
 
 class KeypadImpl(private val coroutineScope: CoroutineScope) : Keypad {
-    private var keyResetJob: Job? = null
+
+    private var resetKeyPressJob: Job? = null
 
     override var currentKey: ByteStore? = null
 
-    override var lastKey: ByteStore? = null
+    override var isKeyPressed: Boolean = false
 
-    override fun onKeyClick(key: Int) {
-        keyResetJob?.cancel()
-        this.currentKey = checkIfValidKey(key)
-        keyResetJob = coroutineScope.launch(Dispatchers.Default) {
-            delay(100)
-            lastKey = currentKey
+    override fun onKeyDown(key: Int) {
+        isKeyPressed = true
+        currentKey = checkIfValidKey(key)
+        resetKeyPressJob?.cancel()
+        resetKeyPressJob = coroutineScope.launch(Dispatchers.Default) {
+            delay(AVERAGE_KEY_RESET_DELAY_MILLIS)
             currentKey = null
         }
     }
 
-    override fun onKeyLongPress(key: Int) {
-        keyResetJob?.cancel()
-        this.currentKey = checkIfValidKey(key)
-        keyResetJob = coroutineScope.launch(Dispatchers.Default) {
-            delay(500)
-            lastKey = currentKey
-            currentKey = null
-        }
+    override fun onKeyUp(key: Int) {
+        isKeyPressed = false
     }
 
     private fun checkIfValidKey(key: Int): ByteStore? {
@@ -48,4 +45,4 @@ class KeypadImpl(private val coroutineScope: CoroutineScope) : Keypad {
     }
 }
 
-enum class KeyEventType { CLICK, LONG }
+enum class KeyEventType { DOWN, UP }

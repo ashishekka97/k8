@@ -33,10 +33,6 @@ class Cpu(
     private val instructionSet: InstructionSet
 
     init {
-        // Load the FONT_SPRITE into the memory (anywhere b/w 000 to 1FF, popularly 050-09f)
-        FONT_SPRITES.forEachIndexed { index, byte ->
-            memory[FONT_START + index] = byte
-        }
         instructionSet = loadInstructions()
     }
 
@@ -82,7 +78,7 @@ class Cpu(
         onDrawn?.invoke(videoMemory)
     }
 
-    fun ret(operands: Operands) {
+    private fun ret(operands: Operands) {
         if (stack.isNotEmpty()) {
             PC = stack.removeLast().toInt()
         }
@@ -99,7 +95,7 @@ class Cpu(
 
     private fun func(operands: Operands) {
         stack.add(PC.toUShort())
-        PC = operands.toInt() - 2
+        PC = operands.toInt()
     }
 
     private fun skipXN(operands: Operands) {
@@ -152,8 +148,9 @@ class Cpu(
                 if (!inCommonMode) {
                     V[x] = V[y]
                 }
-                V[0xF] = (V[x] and 0x01u)
+                val shiftedBit = (V[x] and 0x01u)
                 V[x] = (V[x].toInt() shr 1).toUByte()
+                V[0xF] = shiftedBit
             }
             0x7 -> {
                 val result = V[y].toInt() - V[x].toInt()
@@ -164,8 +161,8 @@ class Cpu(
                 if (!inCommonMode) {
                     V[x] = V[y]
                 }
-                V[0xF] = (V[x].toInt() shr 7).toUByte()
                 V[x] = (V[x].toInt() shl 1).toUByte()
+                V[0xF] = (V[x].toInt() shr 7).toUByte()
             }
         }
     }
@@ -211,9 +208,11 @@ class Cpu(
 
     private fun skipKey(operands: Operands) {
         val x = operands.x().toInt()
-        val result = when (operands.toWordStore().toInt()) {
-            0x9E -> V[x] == keypad.currentKey
-            0xA1 -> V[x] != keypad.currentKey
+        val mode = operands.toByteStore().toInt()
+        val key = keypad.currentKey
+        val result = when (mode) {
+            0x9E -> V[x] == key
+            0xA1 -> V[x] != key
             else -> false
         }
         if (result) PC += 2
@@ -226,25 +225,24 @@ class Cpu(
             0x0A -> {
                 // TODO Handle OG (non-modern) case
                 val key = keypad.currentKey
-                if (key == null) {
-                    // Halt fetch-decode-execute to wait for the key press
-                    PC -= 2
+                val keyPressed = keypad.isKeyPressed
+                if (key != null) {
+                    if (!keyPressed) V[x] = key
                 } else {
-                    V[x] = key
+                    PC -= 2
                 }
             }
             0x15 -> DT = V[x]
             0x18 -> ST = V[x]
             0x1E -> {
                 val result = V[x].toInt() + I
-                if (!inCommonMode && result > 0x0FFF) {
+                if (inCommonMode && result > 0x0FFF) {
                     V[0xF] = 1u
                 }
                 I = result
             }
             0x29 -> {
-                val character = V[x]
-                I = memory[FONT_START + (character.toInt() * 5)].toInt()
+                I = (V[x].toInt() * 5)
             }
             0x33 -> {
                 val hexNum = V[x].toInt()

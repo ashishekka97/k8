@@ -74,10 +74,11 @@ class Chip8Impl(private val scope: CoroutineScope, romBytes: ByteArray? = null) 
 
     override fun loadRom(romBytes: ByteArray) {
         reset()
+        loadFontIntoMemory()
         romBytes.forEachIndexed { index, byte ->
             memory[index + 0x200] = byte.toUByte()
         }
-        println(memory.print())
+        //println(memory.print())
     }
 
     override fun start() {
@@ -128,8 +129,15 @@ class Chip8Impl(private val scope: CoroutineScope, romBytes: ByteArray? = null) 
 
     override fun onKey(key: Int, type: KeyEventType) {
         when (type) {
-            KeyEventType.CLICK -> keypad.onKeyClick(key)
-            KeyEventType.LONG -> keypad.onKeyLongPress(key)
+            KeyEventType.DOWN -> keypad.onKeyDown(key)
+            KeyEventType.UP -> keypad.onKeyUp(key)
+        }
+    }
+
+    private fun loadFontIntoMemory() {
+        // Load the FONT_SPRITE into the memory (anywhere b/w 000 to 1FF, popularly 050-09f)
+        FONT_SPRITES.forEachIndexed { index, byte ->
+            memory[FONT_START + index] = byte
         }
     }
 }

@@ -73,5 +73,5 @@ fun Memory.print(): String {
 }
 
 fun Memory.clear() {
-    indices.forEach { this[it] = 0u }
+    indices.forEach { if (it >= 0x200) this[it] = 0u }
 }

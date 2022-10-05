@@ -1,12 +1,13 @@
+@file:OptIn(ExperimentalComposeUiApi::class)
+
 package me.ashishekka.k8.android
 
 import android.media.AudioManager
 import android.media.ToneGenerator
 import android.os.Bundle
+import android.view.MotionEvent.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -14,44 +15,55 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedButton
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import me.ashishekka.k8.core.Chip8
 import me.ashishekka.k8.core.Chip8Impl
-import me.ashishekka.k8.core.KeyEventType
+import me.ashishekka.k8.core.KeyEventType.*
 import me.ashishekka.k8.core.VideoMemory
+import java.util.*
 
 
 class MainActivity : AppCompatActivity() {
 
     private val chip8 = Chip8Impl(lifecycleScope)
 
-    private val toneGenerator by lazy { ToneGenerator(AudioManager.STREAM_MUSIC, 100) }
+    private val toneGenerator by lazy { ToneGenerator(AudioManager.STREAM_MUSIC, ToneGenerator.MAX_VOLUME) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val romFile = assets.open("c8games/INVADERS")
-        val romData = romFile.readBytes()
         val emulator = findViewById<ComposeView>(R.id.emulator)
-        chip8.loadRom(romData)
+        readRomFile()
         emulator?.setContent {
             MaterialTheme { // or AppCompatTheme
                 MainLayout(chip8, toneGenerator)
             }
         }
-        chip8.start()
+    }
+
+    private fun readRomFile() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val romFile = assets.open("chip8-test-suite.ch8")
+            val romData = romFile.readBytes()
+            chip8.loadRom(romData)
+            chip8.start()
+        }
     }
 }
 
@@ -121,18 +133,22 @@ fun Keypad(chip8: Chip8) {
     }
 }
 
-@kotlin.OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Key(number: Int, chip8: Chip8) {
-    Button(
-        modifier = Modifier.combinedClickable(
-            onClick = { chip8.onKey(number, KeyEventType.CLICK) },
-            onLongClick = { chip8.onKey(number, KeyEventType.LONG) }
-        ),
-        onClick = { chip8.onKey(number, KeyEventType.CLICK) }
+    OutlinedButton(
+        modifier = Modifier.pointerInteropFilter {
+            when (it.action) {
+                ACTION_DOWN -> { chip8.onKey(number, DOWN) }
+                ACTION_MOVE -> { chip8.onKey(number, DOWN) }
+                ACTION_UP -> { chip8.onKey(number, UP) }
+                else -> return@pointerInteropFilter false
+            }
+            true
+        },
+        onClick = { }
     ) {
         Text(
-            text = "${number.toUInt().toString(16).toUpperCase()}",
+            text = number.toUInt().toString(16).uppercase(Locale.ROOT),
             style = MaterialTheme.typography.h6
         )
     }
@@ -140,6 +156,6 @@ fun Key(number: Int, chip8: Chip8) {
 
 @Composable
 fun PlaySound(toneGenerator: ToneGenerator, play: Boolean) {
-    if (play) toneGenerator.startTone(ToneGenerator.TONE_CDMA_PIP, 150)
+    if (play) toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP, 150)
     else toneGenerator.stopTone()
 }
