@@ -3,7 +3,7 @@ package me.ashishekka.k8.core
 import kotlin.random.Random
 
 const val PC_START = 0x200
-const val FONT_START = 0x050
+const val FONT_START = 0x000
 
 class Cpu(
     private val memory: Memory = Memory(4096) { 0u },
