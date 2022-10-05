@@ -73,12 +73,10 @@ class Chip8Impl(private val scope: CoroutineScope, romBytes: ByteArray? = null) 
 
 
     override fun loadRom(romBytes: ByteArray) {
-        reset()
         loadFontIntoMemory()
         romBytes.forEachIndexed { index, byte ->
             memory[index + 0x200] = byte.toUByte()
         }
-        //println(memory.print())
     }
 
     override fun start() {
