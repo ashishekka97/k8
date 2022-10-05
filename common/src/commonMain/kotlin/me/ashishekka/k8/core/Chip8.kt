@@ -97,7 +97,7 @@ class Chip8Impl(private val scope: CoroutineScope, romBytes: ByteArray? = null) 
                 }
                 if (cpu.ST > 0u)  {
                     cpu.ST--
-                    soundState.value = true
+                    if (!soundState.value) soundState.value = true
                 } else {
                     soundState.value = false
                 }

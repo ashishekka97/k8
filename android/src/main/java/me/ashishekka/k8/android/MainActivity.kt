@@ -156,6 +156,5 @@ fun Key(number: Int, chip8: Chip8) {
 
 @Composable
 fun PlaySound(toneGenerator: ToneGenerator, play: Boolean) {
-    if (play) toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP, 150)
-    else toneGenerator.stopTone()
+    if (play) toneGenerator.startTone(ToneGenerator.TONE_SUP_RADIO_ACK)
 }
