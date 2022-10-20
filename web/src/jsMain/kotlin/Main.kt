@@ -1,9 +1,12 @@
 import androidx.compose.runtime.Composable
 import kotlinx.browser.document
+import kotlinx.browser.window
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import me.ashishekka.k8.core.Chip8
 import me.ashishekka.k8.core.Chip8Impl
+import me.ashishekka.k8.core.KeyEventType.DOWN
+import me.ashishekka.k8.core.KeyEventType.UP
 import org.jetbrains.compose.web.attributes.InputType
 import org.jetbrains.compose.web.css.Color
 import org.jetbrains.compose.web.css.em
@@ -19,6 +22,7 @@ import org.khronos.webgl.ArrayBuffer
 import org.khronos.webgl.Uint8Array
 import org.khronos.webgl.get
 import org.w3c.dom.CanvasRenderingContext2D
+import org.w3c.dom.events.KeyboardEvent
 import org.w3c.files.File
 import org.w3c.files.FileList
 import org.w3c.files.FileReader
@@ -28,6 +32,9 @@ import org.w3c.files.get
 fun main() {
     val scope = CoroutineScope(Dispatchers.Main)
     val chip8 = Chip8Impl(scope)
+    window.onkeydown = { handleKey(it, chip8) }
+    window.onkeypress = { handleKey(it, chip8) }
+    window.onkeyup = { handleKey(it, chip8) }
     renderComposable(rootElementId = "root") {
         MainLayout(chip8)
     }
@@ -126,5 +133,39 @@ fun Screen(chip8: Chip8) {
 
 @Composable
 fun PlaySound(play: Boolean) {
+    // TODO -> Add sound later
+}
 
+
+fun handleKey(keyboardEvent: KeyboardEvent, chip8: Chip8) {
+    console.log(keyboardEvent)
+    val chip8Key = keyboardEvent.mapToChip8KeyPad()
+    if (chip8Key !in 0..15) return
+    when (keyboardEvent.type) {
+        "keydown" -> chip8.onKey(chip8Key, DOWN)
+        "keyup" -> chip8.onKey(chip8Key, UP)
+        else -> Unit
+    }
+}
+
+fun KeyboardEvent.mapToChip8KeyPad(): Int {
+    return when (code) {
+        "Digit1" -> 1
+        "Digit2" -> 2
+        "Digit3" -> 3
+        "Digit4" -> 12
+        "KeyQ" -> 4
+        "KeyW" -> 5
+        "KeyE" -> 6
+        "KeyR" -> 13
+        "KeyA" -> 7
+        "KeyS" -> 8
+        "KeyD" -> 9
+        "KeyF" -> 14
+        "KeyZ" -> 10
+        "KeyX" -> 0
+        "KeyC" -> 11
+        "KeyV" -> 15
+        else -> -1
+    }
 }
