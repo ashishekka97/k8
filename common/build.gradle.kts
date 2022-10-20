@@ -2,7 +2,7 @@ import org.jetbrains.compose.compose
 
 plugins {
     kotlin("multiplatform")
-    id("org.jetbrains.compose") version "1.1.0"
+    id("org.jetbrains.compose") version "1.2.0"
     id("com.android.library")
 }
 
@@ -39,7 +39,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 api(compose.runtime)
-                api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.2")
+                api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
                 api("org.kodein.di:kodein-di-framework-compose:7.10.0")
             }
         }
