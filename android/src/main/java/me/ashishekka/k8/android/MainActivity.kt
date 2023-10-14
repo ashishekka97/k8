@@ -2,10 +2,13 @@
 
 package me.ashishekka.k8.android
 
+import android.app.Activity
+import android.content.Intent
 import android.media.AudioManager
 import android.media.ToneGenerator
 import android.os.Bundle
 import android.view.MotionEvent.*
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
@@ -15,6 +18,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedButton
 import androidx.compose.material.Scaffold
@@ -27,8 +32,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.vectorResource
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -42,8 +49,26 @@ import java.util.*
 class MainActivity : AppCompatActivity() {
 
     private val chip8 = Chip8Impl(lifecycleScope)
+    private var currentLoadedRom = "chip8-test-suite.ch8"
 
-    private val toneGenerator by lazy { ToneGenerator(AudioManager.STREAM_MUSIC, ToneGenerator.MAX_VOLUME) }
+    private val toneGenerator by lazy {
+        ToneGenerator(
+            AudioManager.STREAM_MUSIC,
+            ToneGenerator.MAX_VOLUME
+        )
+    }
+
+    private val resultLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val romPath = result.data?.getStringExtra(PICKED_ROM_PATH)
+            if (romPath != null) {
+                readRomFile(romPath)
+            }
+        }
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,25 +77,89 @@ class MainActivity : AppCompatActivity() {
         readRomFile()
         emulator?.setContent {
             MaterialTheme { // or AppCompatTheme
-                MainLayout(chip8, toneGenerator)
+                MainLayout(
+                    chip8 = chip8,
+                    toneGenerator = toneGenerator,
+                    onLoadGameClick = ::launchRomPicker,
+                    onGameResetClick = ::resetRom,
+                    onSettingsClick = ::launchSettings
+                )
             }
         }
     }
 
-    private fun readRomFile() {
+    override fun onResume() {
+        chip8.resume()
+        super.onResume()
+    }
+
+    override fun onPause() {
+        chip8.pause()
+        super.onPause()
+    }
+
+    private fun launchRomPicker() {
+        val intent = Intent(this, RomPickerActivity::class.java)
+        resultLauncher.launch(intent)
+    }
+
+    private fun resetRom() {
+        chip8.reset()
+        readRomFile()
+    }
+
+    private fun launchSettings() {
+        // TODO -> Add settings behaviour
+    }
+
+    private fun readRomFile(filePath: String = currentLoadedRom) {
         lifecycleScope.launch(Dispatchers.IO) {
-            val romFile = assets.open("chip8-test-suite.ch8")
+            val romFile = assets.open(filePath)
             val romData = romFile.readBytes()
             chip8.loadRom(romData)
             chip8.start()
         }
+        currentLoadedRom = filePath
     }
 }
 
 @Composable
-fun MainLayout(chip8: Chip8, toneGenerator: ToneGenerator) {
+fun MainLayout(
+    chip8: Chip8,
+    toneGenerator: ToneGenerator,
+    onLoadGameClick: () -> Unit,
+    onGameResetClick: () -> Unit,
+    onSettingsClick: () -> Unit
+) {
     Scaffold(
-        topBar = { TopAppBar(title = { Text("K8 (Kate)") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("K8 (Kate)") },
+                actions = {
+                    IconButton(onLoadGameClick) {
+                        Icon(
+                            ImageVector.vectorResource(R.drawable.ic_file_open),
+                            "Load ROM",
+                            tint = Color.White
+                        )
+                    }
+                    IconButton(onGameResetClick) {
+                        Icon(
+                            ImageVector.vectorResource(R.drawable.ic_reset),
+                            "Load ROM",
+                            tint = Color.White
+                        )
+                    }
+                    IconButton(onSettingsClick) {
+                        Icon(
+                            ImageVector.vectorResource(R.drawable.ic_settings),
+                            "Load ROM",
+                            tint = Color.White
+                        )
+                    }
+                }
+            )
+        },
     ) {
         val sound = chip8.getSoundState()
         PlaySound(toneGenerator, sound.value)
@@ -138,9 +227,18 @@ fun Key(number: Int, chip8: Chip8) {
     OutlinedButton(
         modifier = Modifier.pointerInteropFilter {
             when (it.action) {
-                ACTION_DOWN -> { chip8.onKey(number, DOWN) }
-                ACTION_MOVE -> { chip8.onKey(number, DOWN) }
-                ACTION_UP -> { chip8.onKey(number, UP) }
+                ACTION_DOWN -> {
+                    chip8.onKey(number, DOWN)
+                }
+
+                ACTION_MOVE -> {
+                    chip8.onKey(number, DOWN)
+                }
+
+                ACTION_UP -> {
+                    chip8.onKey(number, UP)
+                }
+
                 else -> return@pointerInteropFilter false
             }
             true
