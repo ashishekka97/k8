@@ -20,6 +20,10 @@ interface Chip8 {
      */
     fun start()
 
+    fun pause()
+
+    fun resume()
+
     /**
      * Resets the system.
      */
@@ -57,10 +61,13 @@ class Chip8Impl(private val scope: CoroutineScope, romBytes: ByteArray? = null) 
     private val videoMemory = VideoMemory(32) { BooleanArray(64) }
     private val cpu: Cpu
 
-    private val videoMemoryState = mutableStateOf(VideoMemory(32) { BooleanArray(64) }, neverEqualPolicy())
+    private val videoMemoryState =
+        mutableStateOf(VideoMemory(32) { BooleanArray(64) }, neverEqualPolicy())
     private val soundState = mutableStateOf(false, neverEqualPolicy())
 
     private val keypad = KeypadImpl(scope)
+
+    private var isPaused: Boolean = false
 
     init {
         cpu = Cpu(memory, videoMemory, keypad) {
@@ -73,6 +80,7 @@ class Chip8Impl(private val scope: CoroutineScope, romBytes: ByteArray? = null) 
 
 
     override fun loadRom(romBytes: ByteArray) {
+        reset()
         loadFontIntoMemory()
         romBytes.forEachIndexed { index, byte ->
             memory[index + 0x200] = byte.toUByte()
@@ -83,7 +91,7 @@ class Chip8Impl(private val scope: CoroutineScope, romBytes: ByteArray? = null) 
         cpuClockJob = scope.launch(Dispatchers.Default) {
             while (true) {
                 delay(1000 / cpuClockHz)
-                cpu.tick()
+                if (!isPaused) cpu.tick()
             }
         }
 
@@ -93,7 +101,7 @@ class Chip8Impl(private val scope: CoroutineScope, romBytes: ByteArray? = null) 
                 if (cpu.DT > 0u) {
                     cpu.DT--
                 }
-                if (cpu.ST > 0u)  {
+                if (cpu.ST > 0u) {
                     cpu.ST--
                     if (!soundState.value) soundState.value = true
                 } else {
@@ -101,6 +109,14 @@ class Chip8Impl(private val scope: CoroutineScope, romBytes: ByteArray? = null) 
                 }
             }
         }
+    }
+
+    override fun pause() {
+        isPaused = true
+    }
+
+    override fun resume() {
+        isPaused = false
     }
 
     override fun reset() {
