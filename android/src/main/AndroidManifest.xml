@@ -11,5 +11,6 @@
             </intent-filter>
         </activity>
         <activity android:name=".RomPickerActivity" android:exported="true" />
+        <activity android:name=".SettingsActivity" android:exported="true" />
     </application>
 </manifest>
