@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
@@ -18,15 +19,13 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.ButtonDefaults
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.LocalElevationOverlay
@@ -34,6 +33,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedButton
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Snackbar
+import androidx.compose.material.SnackbarDuration
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
@@ -55,7 +55,9 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
+import java.util.Locale
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import me.ashishekka.k8.android.data.KEY_HAPTICS
 import me.ashishekka.k8.android.data.KEY_THEME
 import me.ashishekka.k8.android.data.KateDataStoreImpl
@@ -63,8 +65,6 @@ import me.ashishekka.k8.android.theming.ColorScheme
 import me.ashishekka.k8.android.theming.fullScaffoldBackground
 import me.ashishekka.k8.android.theming.getThemeColors
 import me.ashishekka.k8.core.VideoMemory
-import java.util.Locale
-
 
 class MainActivity : AppCompatActivity() {
 
@@ -89,10 +89,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
+        viewModel.observeUiState()
         setContent {
             val scope = rememberCoroutineScope()
             val snackbarHostState = remember { SnackbarHostState() }
@@ -100,6 +100,11 @@ class MainActivity : AppCompatActivity() {
             val theme = ColorScheme.getThemeFromIndex(themePreferenceState.value)
             val hapticFeedbackEnabled =
                 dataStore.getBooleanPreference(KEY_HAPTICS).collectAsState(false)
+            maybeShowSnackbar(viewModel.uiState.value.snackMessage) {
+                scope.launch {
+                    snackbarHostState.showSnackbar(it, duration = SnackbarDuration.Short)
+                }
+            }
             MaterialTheme(colors = getThemeColors(theme)) { // or AppCompatTheme
                 MainLayout(
                     videoMemory = viewModel.videoMemory,
@@ -114,11 +119,8 @@ class MainActivity : AppCompatActivity() {
                     onSettingsClick = ::launchSettings
                 )
             }
-            with(viewModel) {
-                observeUiState(scope, snackbarHostState)
-                readRomFile(this@MainActivity)
-            }
         }
+        viewModel.readRomFile(this, "chip8-test-suite.ch8")
     }
 
     override fun onResume() {
@@ -139,6 +141,16 @@ class MainActivity : AppCompatActivity() {
     private fun launchSettings() {
         val intent = Intent(this, SettingsActivity::class.java)
         startActivity(intent)
+    }
+}
+
+@Composable
+fun maybeShowSnackbar(
+    snackMessage: SnackMessage?,
+    show: (message: String) -> Unit
+) {
+    if (snackMessage != null) {
+        show(snackMessage.message)
     }
 }
 
@@ -187,7 +199,7 @@ fun MainLayout(
                             tint = MaterialTheme.colors.primary
                         )
                     }
-                },
+                }
             )
         },
         snackbarHost = {
@@ -216,8 +228,12 @@ fun MainLayout(
 fun Screen(videoMemory: VideoMemory) {
     val pixelOffColor = MaterialTheme.colors.background
     val pixelOnColor = MaterialTheme.colors.primary
-    BoxWithConstraints {
-        Canvas(modifier = Modifier.fillMaxWidth()) {
+    BoxWithConstraints(
+        modifier = Modifier.padding(top = 16.dp).border(
+            BorderStroke(1.dp, MaterialTheme.colors.primary.copy(alpha = 0.6f))
+        ).padding(4.dp)
+    ) {
+        Canvas(modifier = Modifier.size(width = 320.dp, height = 160.dp)) {
             val blockSize = size.width / 64
             videoMemory.forEachIndexed { row, rowData ->
                 rowData.forEachIndexed { col, _ ->
@@ -236,7 +252,7 @@ fun Keypad(hapticsState: State<Boolean>, onKeyDown: (Int) -> Unit, onKeyUp: (Int
     val keys = listOf(1, 2, 3, 12, 4, 5, 6, 13, 7, 8, 9, 14, 10, 0, 11, 15)
     LazyVerticalGrid(
         columns = GridCells.Fixed(4),
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 42.dp)
+        modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 16.dp)
     ) {
         items(keys) { key ->
             Key(key, hapticsState, onKeyDown, onKeyUp)
@@ -257,7 +273,9 @@ fun Key(
         interactionSource.interactions.collectLatest { interaction ->
             when (interaction) {
                 is PressInteraction.Press -> {
-                    if (hapticsState.value) hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    if (hapticsState.value) {
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    }
                     onKeyDown(number)
                 }
 
@@ -268,16 +286,16 @@ fun Key(
     OutlinedButton(
         interactionSource = interactionSource,
         border = BorderStroke(
-            ButtonDefaults.OutlinedBorderSize,
-            MaterialTheme.colors.primary.copy(alpha = ButtonDefaults.OutlinedBorderOpacity)
+            1.dp,
+            MaterialTheme.colors.primary.copy(alpha = 0.6f)
         ),
         onClick = { },
-        shape = CircleShape,
-        modifier = Modifier.size(94.dp).padding(8.dp)
+        shape = RoundedCornerShape(8.dp),
+        modifier = Modifier.padding(8.dp)
     ) {
         Text(
             text = number.toUInt().toString(16).uppercase(Locale.ROOT),
-            style = MaterialTheme.typography.h6
+            style = MaterialTheme.typography.h4
         )
     }
 }
