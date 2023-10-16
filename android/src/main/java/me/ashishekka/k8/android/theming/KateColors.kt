@@ -1,7 +1,11 @@
 package me.ashishekka.k8.android.theming
 
 import androidx.compose.material.Colors
+import androidx.compose.material.ElevationOverlay
+import androidx.compose.material.MaterialTheme
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 
 fun defaultColors(
     primary: Color = Color(0xFFe3e8ea),
@@ -203,5 +207,17 @@ enum class ColorScheme(private val theme: String) {
         } catch (ex: Throwable) {
             DEFAULT
         }
+    }
+}
+
+@Composable
+fun fullScaffoldBackground(
+    color: Color,
+    elevationOverlay: ElevationOverlay?
+): Color {
+    return if (color == MaterialTheme.colors.surface && elevationOverlay != null) {
+        elevationOverlay.apply(color, 4.dp)
+    } else {
+        color
     }
 }

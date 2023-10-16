@@ -51,7 +51,7 @@ class SettingViewModel(application: Application) : ViewModel() {
                     Setting.MultiOptionSetting(
                         key = KEY_THEME,
                         title = "Theme",
-                        description = "Change the color scheme of the app and chip8 screen",
+                        description = "Change the color scheme of the app and chip8 screen (Resets ROM)",
                         options = ColorScheme.getAllThemes(),
                         optionSelected = theme
                     ),
@@ -67,7 +67,7 @@ class SettingViewModel(application: Application) : ViewModel() {
                     Setting.TextSetting(
                         key = KEY_VERSION,
                         title = "Version",
-                        description = "v1.0.1"
+                        description = "${BuildConfig.BUILD_TYPE} ${BuildConfig.VERSION_NAME}"
                     )
                 )
             }.collectLatest {

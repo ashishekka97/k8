@@ -10,6 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
@@ -19,6 +20,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -27,13 +29,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
+import androidx.compose.material.LocalElevationOverlay
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedButton
 import androidx.compose.material.Scaffold
+import androidx.compose.material.Snackbar
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
+import androidx.compose.material.primarySurface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
@@ -49,11 +54,13 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
 import kotlinx.coroutines.flow.collectLatest
 import me.ashishekka.k8.android.data.KEY_HAPTICS
 import me.ashishekka.k8.android.data.KEY_THEME
 import me.ashishekka.k8.android.data.KateDataStoreImpl
 import me.ashishekka.k8.android.theming.ColorScheme
+import me.ashishekka.k8.android.theming.fullScaffoldBackground
 import me.ashishekka.k8.android.theming.getThemeColors
 import me.ashishekka.k8.core.VideoMemory
 import java.util.Locale
@@ -85,18 +92,20 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             val scope = rememberCoroutineScope()
             val snackbarHostState = remember { SnackbarHostState() }
             val themePreferenceState = dataStore.getIntPreference(KEY_THEME).collectAsState(0)
             val theme = ColorScheme.getThemeFromIndex(themePreferenceState.value)
-            val hapticFeedbackEnabled = dataStore.getBooleanPreference(KEY_HAPTICS).collectAsState(false)
+            val hapticFeedbackEnabled =
+                dataStore.getBooleanPreference(KEY_HAPTICS).collectAsState(false)
             MaterialTheme(colors = getThemeColors(theme)) { // or AppCompatTheme
                 MainLayout(
                     videoMemory = viewModel.videoMemory,
                     soundState = viewModel.soundState,
                     toneGenerator = toneGenerator,
-                    enableHaptics = hapticFeedbackEnabled.value,
+                    hapticsState = hapticFeedbackEnabled,
                     snackbarHostState = snackbarHostState,
                     onGameKeyDown = viewModel::onGameKeyDown,
                     onGameKeyUp = viewModel::onGameKeyUp,
@@ -138,7 +147,7 @@ fun MainLayout(
     videoMemory: State<VideoMemory>,
     soundState: State<Boolean>,
     toneGenerator: ToneGenerator,
-    enableHaptics: Boolean,
+    hapticsState: State<Boolean>,
     snackbarHostState: SnackbarHostState,
     onGameKeyDown: (Int) -> Unit,
     onGameKeyUp: (Int) -> Unit,
@@ -147,6 +156,12 @@ fun MainLayout(
     onSettingsClick: () -> Unit
 ) {
     Scaffold(
+        modifier = Modifier.background(
+            fullScaffoldBackground(
+                color = MaterialTheme.colors.primarySurface,
+                elevationOverlay = LocalElevationOverlay.current
+            )
+        ).safeDrawingPadding(),
         topBar = {
             TopAppBar(
                 title = { Text("K8 (Kate)", color = MaterialTheme.colors.primary) },
@@ -172,20 +187,27 @@ fun MainLayout(
                             tint = MaterialTheme.colors.primary
                         )
                     }
-                }
+                },
             )
         },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                Snackbar(
+                    data,
+                    backgroundColor = MaterialTheme.colors.primary,
+                    contentColor = MaterialTheme.colors.background
+                )
+            }
+        }
     ) {
-        val sound = soundState
-        PlaySound(toneGenerator, sound.value)
+        PlaySound(toneGenerator, soundState.value)
         Column(
             modifier = Modifier.fillMaxHeight().padding(it),
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row { Screen(videoMemory.value) }
-            Row { Keypad(enableHaptics, onGameKeyDown, onGameKeyUp) }
+            Row { Keypad(hapticsState, onGameKeyDown, onGameKeyUp) }
         }
     }
 }
@@ -210,27 +232,32 @@ fun Screen(videoMemory: VideoMemory) {
 }
 
 @Composable
-fun Keypad(enableHaptics: Boolean, onKeyDown: (Int) -> Unit, onKeyUp: (Int) -> Unit) {
+fun Keypad(hapticsState: State<Boolean>, onKeyDown: (Int) -> Unit, onKeyUp: (Int) -> Unit) {
     val keys = listOf(1, 2, 3, 12, 4, 5, 6, 13, 7, 8, 9, 14, 10, 0, 11, 15)
     LazyVerticalGrid(
         columns = GridCells.Fixed(4),
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 42.dp)
     ) {
         items(keys) { key ->
-            Key(key, enableHaptics, onKeyDown, onKeyUp)
+            Key(key, hapticsState, onKeyDown, onKeyUp)
         }
     }
 }
 
 @Composable
-fun Key(number: Int, enableHaptics: Boolean, onKeyDown: (Int) -> Unit, onKeyUp: (Int) -> Unit) {
+fun Key(
+    number: Int,
+    hapticsState: State<Boolean>,
+    onKeyDown: (Int) -> Unit,
+    onKeyUp: (Int) -> Unit
+) {
     val interactionSource = remember { MutableInteractionSource() }
     val hapticFeedback = LocalHapticFeedback.current
     LaunchedEffect(interactionSource) {
         interactionSource.interactions.collectLatest { interaction ->
             when (interaction) {
                 is PressInteraction.Press -> {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    if (hapticsState.value) hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                     onKeyDown(number)
                 }
 
