@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.Card
+import androidx.compose.material.Colors
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -27,23 +28,31 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import me.ashishekka.k8.android.data.KEY_THEME
+import me.ashishekka.k8.android.data.KateDataStoreImpl
+import me.ashishekka.k8.android.theming.ColorScheme
+import me.ashishekka.k8.android.theming.getThemeColors
+import me.ashishekka.k8.android.util.capitalize
 
 class SettingsActivity : AppCompatActivity() {
-
-    private val viewModel by lazy { SettingViewModel() }
+    private val viewModel by lazy { SettingViewModel(this.application) }
+    private val dataStore by lazy { KateDataStoreImpl(application) }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             val uiState = viewModel.uiState
+            val themeState = dataStore.getIntPreference(KEY_THEME).collectAsState(0)
+            val theme = ColorScheme.getThemeFromIndex(themeState.value)
             SettingScreen(
+                getThemeColors(theme),
                 uiState.value,
                 viewModel::onSettingClicked,
                 viewModel::onDialogOptionSelected,
@@ -57,23 +66,24 @@ class SettingsActivity : AppCompatActivity() {
 
 @Composable
 fun SettingScreen(
+    themeColors: Colors,
     uiState: SettingUiState,
     onSettingClicked: (Setting) -> Unit,
     onDialogOptionSelected: (Setting.MultiOptionSetting, Int) -> Unit,
     onDialogCancelled: () -> Unit,
     onBackClicked: () -> Unit
 ) {
-    MaterialTheme { // or AppCompatTheme
+    MaterialTheme(colors = themeColors) { // or AppCompatTheme
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Settings") },
+                    title = { Text("Settings", color = MaterialTheme.colors.primary) },
                     navigationIcon = {
                         IconButton(onBackClicked) {
                             Icon(
                                 ImageVector.vectorResource(R.drawable.ic_back),
                                 "Back to previous screen",
-                                tint = Color.White
+                                tint = MaterialTheme.colors.primary
                             )
                         }
                     }
@@ -106,12 +116,13 @@ fun OptionSelectionUi(
                 Text(
                     "Choose ${setting.title.lowercase()}",
                     style = MaterialTheme.typography.h6,
+                    color = MaterialTheme.colors.primary,
                     modifier = Modifier.padding(16.dp)
                 )
                 LazyColumn {
                     itemsIndexed(setting.options) { optionIndex, optionName ->
                         OptionUi(
-                            optionName = optionName,
+                            optionName = optionName.capitalize(),
                             optionIndex = optionIndex,
                             isSelected = setting.optionSelected == optionIndex
                         ) { newSelectedIndex -> onOptionChanged(newSelectedIndex) }
@@ -146,7 +157,11 @@ fun OptionUi(
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 2.dp)
         ) {
-            Text(optionName, style = MaterialTheme.typography.subtitle1)
+            Text(
+                optionName,
+                style = MaterialTheme.typography.subtitle1,
+                color = MaterialTheme.colors.primary
+            )
             RadioButton(
                 selected = isSelected,
                 onClick = { onOptionSelected(optionIndex) }
@@ -184,8 +199,16 @@ fun SettingUi(
             modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
         ) {
             Column(modifier = Modifier.fillMaxWidth(0.6f)) {
-                Text(setting.title, style = MaterialTheme.typography.subtitle1)
-                Text(setting.description, style = MaterialTheme.typography.caption)
+                Text(
+                    setting.title,
+                    style = MaterialTheme.typography.subtitle1,
+                    color = MaterialTheme.colors.primary
+                )
+                Text(
+                    setting.description,
+                    style = MaterialTheme.typography.caption,
+                    color = MaterialTheme.colors.primary
+                )
             }
             Column(
                 modifier = Modifier.fillMaxWidth(0.4f),
@@ -201,10 +224,14 @@ fun SettingUi(
                     is Setting.MultiOptionSetting -> {
                         val text = with(setting) {
                             if (optionSelected > -1 && optionSelected < options.size) {
-                                options[optionSelected]
+                                options[optionSelected].capitalize()
                             } else "Invalid"
                         }
-                        Text(text, style = MaterialTheme.typography.subtitle2)
+                        Text(
+                            text,
+                            style = MaterialTheme.typography.subtitle2,
+                            color = MaterialTheme.colors.primary
+                        )
                     }
 
                     is Setting.TextSetting -> Unit
@@ -215,24 +242,28 @@ fun SettingUi(
 }
 
 sealed class Setting(
+    open val key: String,
     open val title: String,
     open val description: String
 ) {
     data class ToggleSetting(
+        override val key: String,
         override val title: String,
         override val description: String,
         val isEnabled: Boolean
-    ) : Setting(title, description)
+    ) : Setting(key, title, description)
 
     data class MultiOptionSetting(
+        override val key: String,
         override val title: String,
         override val description: String,
         val options: List<String>,
         val optionSelected: Int
-    ) : Setting(title, description)
+    ) : Setting(key, title, description)
 
     data class TextSetting(
+        override val key: String,
         override val title: String,
         override val description: String
-    ) : Setting(title, description)
+    ) : Setting(key, title, description)
 }

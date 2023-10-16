@@ -1,5 +1,6 @@
 package me.ashishekka.k8.android
 
+import android.app.Application
 import android.content.Context
 import androidx.compose.material.SnackbarDuration
 import androidx.compose.material.SnackbarHostState
@@ -10,12 +11,17 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import me.ashishekka.k8.android.data.EmulatorSpeed
+import me.ashishekka.k8.android.data.KEY_SOUND
+import me.ashishekka.k8.android.data.KEY_SPEED
+import me.ashishekka.k8.android.data.KateDataStoreImpl
 import me.ashishekka.k8.core.Chip8Impl
 import me.ashishekka.k8.core.KeyEventType
 
-class MainViewModel : ViewModel() {
+class MainViewModel(application: Application) : ViewModel() {
 
     private val chip8 = Chip8Impl(viewModelScope)
 
@@ -35,6 +41,8 @@ class MainViewModel : ViewModel() {
 
     val videoMemory = chip8.getVideoMemoryState()
     val soundState = chip8.getSoundState()
+
+    private val dataStore by lazy { KateDataStoreImpl(application) }
 
     private var composeCoroutineScope: CoroutineScope? = null
     private var snackbarHostState: SnackbarHostState? = null
@@ -66,6 +74,17 @@ class MainViewModel : ViewModel() {
     ) {
         this.composeCoroutineScope = composeCoroutineScope
         this.snackbarHostState = snackbarHostState
+        viewModelScope.launch {
+            dataStore.getIntPreference(KEY_SPEED).collectLatest { speedIndex ->
+                val speed = EmulatorSpeed.getSpeedFromIndex(speedIndex)
+                chip8.emulationSpeedFactor(speed.speedFactor)
+            }
+        }
+        viewModelScope.launch {
+            dataStore.getBooleanPreference(KEY_SOUND).collectLatest { soundEnabled ->
+                chip8.toggleSound(soundEnabled)
+            }
+        }
     }
 
     fun onGameKeyDown(key: Int) {

@@ -1,13 +1,16 @@
 package me.ashishekka.k8.core
 
 import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.neverEqualPolicy
+import androidx.compose.runtime.produceState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.math.roundToLong
 
 interface Chip8 {
     /**
@@ -48,11 +51,17 @@ interface Chip8 {
      * Register keypad input
      */
     fun onKey(key: Int, type: KeyEventType)
+
+    fun emulationSpeedFactor(factor: Float)
+
+    fun toggleSound(isEnabled: Boolean)
 }
 
 class Chip8Impl(private val scope: CoroutineScope, romBytes: ByteArray? = null) : Chip8 {
 
     private val cpuClockHz: Long = 1000
+    private var speedFactor: Float = 1.0f
+    private var soundEnabled: Boolean = true
     private val timerClockHz: Long = 60
     private var cpuClockJob: Job? = null
     private var timerJob: Job? = null
@@ -90,20 +99,22 @@ class Chip8Impl(private val scope: CoroutineScope, romBytes: ByteArray? = null) 
     override fun start() {
         cpuClockJob = scope.launch(Dispatchers.Default) {
             while (true) {
-                delay(1000 / cpuClockHz)
+                val delayInterval = ((1000 / speedFactor) / cpuClockHz).roundToLong()
+                delay(delayInterval)
                 if (!isPaused) cpu.tick()
             }
         }
 
         timerJob = scope.launch(Dispatchers.Default) {
             while (true) {
-                delay(1000 / timerClockHz)
+                val delayInterval = ((1000 / speedFactor) / timerClockHz).roundToLong()
+                delay(delayInterval)
                 if (cpu.DT > 0u) {
                     cpu.DT--
                 }
                 if (cpu.ST > 0u) {
                     cpu.ST--
-                    if (!soundState.value) soundState.value = true
+                    soundState.value = true
                 } else {
                     soundState.value = false
                 }
@@ -134,7 +145,7 @@ class Chip8Impl(private val scope: CoroutineScope, romBytes: ByteArray? = null) 
     }
 
     override fun getSoundState(): State<Boolean> {
-        return soundState
+        return derivedStateOf { soundState.value && soundEnabled }
     }
 
     override fun isRunning(): Boolean {
@@ -146,6 +157,14 @@ class Chip8Impl(private val scope: CoroutineScope, romBytes: ByteArray? = null) 
             KeyEventType.DOWN -> keypad.onKeyDown(key)
             KeyEventType.UP -> keypad.onKeyUp(key)
         }
+    }
+
+    override fun emulationSpeedFactor(factor: Float) {
+        speedFactor = factor
+    }
+
+    override fun toggleSound(isEnabled: Boolean) {
+        soundEnabled = isEnabled
     }
 
     private fun loadFontIntoMemory() {

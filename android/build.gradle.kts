@@ -15,6 +15,7 @@ dependencies {
     implementation(project(":common"))
     implementation("androidx.activity:activity-compose:1.6.0")
     implementation("androidx.compose.material:material:1.2.1")
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
 }
 
 android {
