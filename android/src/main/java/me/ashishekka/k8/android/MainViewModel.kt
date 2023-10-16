@@ -2,18 +2,15 @@ package me.ashishekka.k8.android
 
 import android.app.Application
 import android.content.Context
-import androidx.compose.material.SnackbarDuration
-import androidx.compose.material.SnackbarHostState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import me.ashishekka.k8.android.data.EmulatorSpeed
 import me.ashishekka.k8.android.data.KEY_SOUND
 import me.ashishekka.k8.android.data.KEY_SPEED
@@ -44,10 +41,7 @@ class MainViewModel(application: Application) : ViewModel() {
 
     private val dataStore by lazy { KateDataStoreImpl(application) }
 
-    private var composeCoroutineScope: CoroutineScope? = null
-    private var snackbarHostState: SnackbarHostState? = null
-
-    fun readRomFile(context: Context, filePath: String = uiState.value.currentRom) {
+    fun readRomFile(context: Context, filePath: String) {
         viewModelScope.launch(Dispatchers.IO + coroutineExceptionHandler) {
             val romFile = context.assets.open(filePath)
             val romData = romFile.readBytes()
@@ -57,23 +51,15 @@ class MainViewModel(application: Application) : ViewModel() {
                 currentRom = filePath,
                 snackMessage = SnackMessage(MessageType.SUCCESS, "Loaded $filePath")
             )
-            composeCoroutineScope?.let {
-                withContext(it.coroutineContext) {
-                    snackbarHostState?.showSnackbar(
-                        _uiState.value.snackMessage.message,
-                        duration = SnackbarDuration.Short
-                    )
-                }
-            }
+            delay(100)
+            _uiState.value = UiState(
+                currentRom = filePath,
+                snackMessage = null
+            )
         }
     }
 
-    fun observeUiState(
-        composeCoroutineScope: CoroutineScope,
-        snackbarHostState: SnackbarHostState
-    ) {
-        this.composeCoroutineScope = composeCoroutineScope
-        this.snackbarHostState = snackbarHostState
+    fun observeUiState() {
         viewModelScope.launch {
             dataStore.getIntPreference(KEY_SPEED).collectLatest { speedIndex ->
                 val speed = EmulatorSpeed.getSpeedFromIndex(speedIndex)
@@ -105,13 +91,13 @@ class MainViewModel(application: Application) : ViewModel() {
 
     fun resetRom(context: Context) {
         chip8.reset()
-        readRomFile(context)
+        readRomFile(context, _uiState.value.currentRom)
     }
 }
 
 data class UiState(
-    val currentRom: String = "chip8-test-suite.ch8",
-    val snackMessage: SnackMessage = SnackMessage(MessageType.SUCCESS, "Loaded $currentRom")
+    val currentRom: String = "",
+    val snackMessage: SnackMessage? = null
 )
 
 data class SnackMessage(
