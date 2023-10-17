@@ -4,13 +4,12 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.neverEqualPolicy
-import androidx.compose.runtime.produceState
+import kotlin.math.roundToLong
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.math.roundToLong
 
 interface Chip8 {
     /**
@@ -74,7 +73,7 @@ class Chip8Impl(private val scope: CoroutineScope, romBytes: ByteArray? = null) 
         mutableStateOf(VideoMemory(32) { BooleanArray(64) }, neverEqualPolicy())
     private val soundState = mutableStateOf(false, neverEqualPolicy())
 
-    private val keypad = KeypadImpl(scope)
+    private val keypad = KeypadImpl()
 
     private var isPaused: Boolean = false
 
@@ -86,7 +85,6 @@ class Chip8Impl(private val scope: CoroutineScope, romBytes: ByteArray? = null) 
             loadRom(romBytes)
         }
     }
-
 
     override fun loadRom(romBytes: ByteArray) {
         reset()
