@@ -134,8 +134,6 @@ class Chip8Impl(private val scope: CoroutineScope, romBytes: ByteArray? = null) 
         cpu.reset()
         memory.clear()
         videoMemory.clear()
-        videoMemoryState.value = videoMemory
-        soundState.value = false
     }
 
     override fun getVideoMemoryState(): State<Array<BooleanArray>> {
