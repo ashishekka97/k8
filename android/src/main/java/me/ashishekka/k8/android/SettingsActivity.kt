@@ -44,10 +44,10 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.core.view.WindowCompat
 import me.ashishekka.k8.android.data.KEY_THEME
 import me.ashishekka.k8.android.data.KateDataStoreImpl
-import me.ashishekka.k8.android.theming.ColorScheme
 import me.ashishekka.k8.android.theming.fullScaffoldBackground
 import me.ashishekka.k8.android.theming.getThemeColors
 import me.ashishekka.k8.android.util.capitalize
+import me.ashishekka.k8.configs.ColorScheme
 
 class SettingsActivity : AppCompatActivity() {
     private val viewModel by lazy { SettingViewModel(this.application) }
@@ -110,7 +110,8 @@ fun SettingScreen(
                     uiState.optionDialog,
                     { newOptionIndex ->
                         onDialogOptionSelected(uiState.optionDialog, newOptionIndex)
-                    }) {
+                    }
+                ) {
                     onDialogCancelled()
                 }
             }
@@ -242,7 +243,9 @@ fun SettingUi(
                         val text = with(setting) {
                             if (optionSelected > -1 && optionSelected < options.size) {
                                 options[optionSelected].capitalize()
-                            } else "Invalid"
+                            } else {
+                                "Invalid"
+                            }
                         }
                         Text(
                             text,

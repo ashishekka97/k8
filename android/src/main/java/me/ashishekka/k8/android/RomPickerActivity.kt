@@ -39,9 +39,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import me.ashishekka.k8.android.data.KEY_THEME
 import me.ashishekka.k8.android.data.KateDataStoreImpl
-import me.ashishekka.k8.android.theming.ColorScheme
 import me.ashishekka.k8.android.theming.fullScaffoldBackground
 import me.ashishekka.k8.android.theming.getThemeColors
+import me.ashishekka.k8.configs.ColorScheme
 
 const val PICKED_ROM_PATH = "PICKED_ROM_PATH"
 
@@ -79,7 +79,9 @@ class RomPickerActivity : AppCompatActivity() {
                         romName = fileName,
                         romPath = filePath
                     )
-                } else null
+                } else {
+                    null
+                }
             } ?: emptyList()
             romFileList.value = romFiles
         }

@@ -11,10 +11,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import me.ashishekka.k8.android.data.EmulatorSpeed
 import me.ashishekka.k8.android.data.KEY_SOUND
 import me.ashishekka.k8.android.data.KEY_SPEED
 import me.ashishekka.k8.android.data.KateDataStoreImpl
+import me.ashishekka.k8.configs.EmulatorSpeed
 import me.ashishekka.k8.core.Chip8Impl
 import me.ashishekka.k8.core.KeyEventType
 

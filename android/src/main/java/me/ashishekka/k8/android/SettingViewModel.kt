@@ -9,14 +9,14 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import me.ashishekka.k8.android.data.EmulatorSpeed
 import me.ashishekka.k8.android.data.KEY_HAPTICS
 import me.ashishekka.k8.android.data.KEY_SOUND
 import me.ashishekka.k8.android.data.KEY_SPEED
 import me.ashishekka.k8.android.data.KEY_THEME
 import me.ashishekka.k8.android.data.KEY_VERSION
 import me.ashishekka.k8.android.data.KateDataStoreImpl
-import me.ashishekka.k8.android.theming.ColorScheme
+import me.ashishekka.k8.configs.ColorScheme
+import me.ashishekka.k8.configs.EmulatorSpeed
 
 class SettingViewModel(application: Application) : ViewModel() {
     private val _uiState: MutableState<SettingUiState> = mutableStateOf(SettingUiState())
@@ -51,7 +51,7 @@ class SettingViewModel(application: Application) : ViewModel() {
                     Setting.MultiOptionSetting(
                         key = KEY_THEME,
                         title = "Theme",
-                        description = "Change the color scheme of the app and chip8 screen (Resets ROM)",
+                        description = "Change the color scheme of the app and chip8 screen",
                         options = ColorScheme.getAllThemes(),
                         optionSelected = theme
                     ),

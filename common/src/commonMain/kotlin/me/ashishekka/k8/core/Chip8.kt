@@ -15,7 +15,7 @@ interface Chip8 {
     /**
      * Loads the ROM into the memory starting at 0x200
      */
-    fun loadRom(romBytes: ByteArray)
+    fun loadRom(romBytes: ByteArray): Boolean
 
     /**
      * Starts emulation.
@@ -86,11 +86,16 @@ class Chip8Impl(private val scope: CoroutineScope, romBytes: ByteArray? = null) 
         }
     }
 
-    override fun loadRom(romBytes: ByteArray) {
-        reset()
-        loadFontIntoMemory()
-        romBytes.forEachIndexed { index, byte ->
-            memory[index + 0x200] = byte.toUByte()
+    override fun loadRom(romBytes: ByteArray): Boolean {
+        return try {
+            reset()
+            loadFontIntoMemory()
+            romBytes.forEachIndexed { index, byte ->
+                memory[index + 0x200] = byte.toUByte()
+            }
+            true
+        } catch (ex: Throwable) {
+            false
         }
     }
 
