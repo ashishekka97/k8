@@ -1,4 +1,4 @@
-package me.ashishekka.k8.android.data
+package me.ashishekka.k8.configs
 
 enum class EmulatorSpeed(val speedFactor: Float) {
     HALF(0.5f),

@@ -61,9 +61,9 @@ import kotlinx.coroutines.launch
 import me.ashishekka.k8.android.data.KEY_HAPTICS
 import me.ashishekka.k8.android.data.KEY_THEME
 import me.ashishekka.k8.android.data.KateDataStoreImpl
-import me.ashishekka.k8.android.theming.ColorScheme
 import me.ashishekka.k8.android.theming.fullScaffoldBackground
 import me.ashishekka.k8.android.theming.getThemeColors
+import me.ashishekka.k8.configs.ColorScheme
 import me.ashishekka.k8.core.VideoMemory
 
 class MainActivity : AppCompatActivity() {
