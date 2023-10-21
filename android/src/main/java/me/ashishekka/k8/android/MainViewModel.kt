@@ -1,6 +1,5 @@
 package me.ashishekka.k8.android
 
-import android.app.Application
 import android.content.Context
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -11,14 +10,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import me.ashishekka.k8.android.data.KEY_SOUND
-import me.ashishekka.k8.android.data.KEY_SPEED
-import me.ashishekka.k8.android.data.KateDataStoreImpl
 import me.ashishekka.k8.configs.EmulatorSpeed
 import me.ashishekka.k8.core.Chip8Impl
 import me.ashishekka.k8.core.KeyEventType
+import me.ashishekka.k8.storage.K8Settings
+import me.ashishekka.k8.storage.KEY_SOUND
+import me.ashishekka.k8.storage.KEY_SPEED
 
-class MainViewModel(application: Application) : ViewModel() {
+class MainViewModel : ViewModel() {
 
     private val chip8 = Chip8Impl(viewModelScope)
 
@@ -39,7 +38,7 @@ class MainViewModel(application: Application) : ViewModel() {
     val videoMemory = chip8.getVideoMemoryState()
     val soundState = chip8.getSoundState()
 
-    private val dataStore by lazy { KateDataStoreImpl(application) }
+    val settings by lazy { K8Settings() }
 
     fun readRomFile(context: Context, filePath: String) {
         viewModelScope.launch(Dispatchers.IO + coroutineExceptionHandler) {
@@ -61,13 +60,13 @@ class MainViewModel(application: Application) : ViewModel() {
 
     fun observeUiState() {
         viewModelScope.launch {
-            dataStore.getIntPreference(KEY_SPEED).collectLatest { speedIndex ->
+            settings.getIntSetting(KEY_SPEED).collectLatest { speedIndex ->
                 val speed = EmulatorSpeed.getSpeedFromIndex(speedIndex)
                 chip8.emulationSpeedFactor(speed.speedFactor)
             }
         }
         viewModelScope.launch {
-            dataStore.getBooleanPreference(KEY_SOUND).collectLatest { soundEnabled ->
+            settings.getBooleanSetting(KEY_SOUND).collectLatest { soundEnabled ->
                 chip8.toggleSound(soundEnabled)
             }
         }

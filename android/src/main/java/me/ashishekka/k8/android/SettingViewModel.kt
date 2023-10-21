@@ -1,6 +1,5 @@
 package me.ashishekka.k8.android
 
-import android.app.Application
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -9,29 +8,29 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import me.ashishekka.k8.android.data.KEY_HAPTICS
-import me.ashishekka.k8.android.data.KEY_SOUND
-import me.ashishekka.k8.android.data.KEY_SPEED
-import me.ashishekka.k8.android.data.KEY_THEME
-import me.ashishekka.k8.android.data.KEY_VERSION
-import me.ashishekka.k8.android.data.KateDataStoreImpl
 import me.ashishekka.k8.configs.ColorScheme
 import me.ashishekka.k8.configs.EmulatorSpeed
+import me.ashishekka.k8.storage.K8Settings
+import me.ashishekka.k8.storage.KEY_HAPTICS
+import me.ashishekka.k8.storage.KEY_SOUND
+import me.ashishekka.k8.storage.KEY_SPEED
+import me.ashishekka.k8.storage.KEY_THEME
+import me.ashishekka.k8.storage.KEY_VERSION
 
-class SettingViewModel(application: Application) : ViewModel() {
+class SettingViewModel : ViewModel() {
     private val _uiState: MutableState<SettingUiState> = mutableStateOf(SettingUiState())
     val uiState: State<SettingUiState>
         get() = _uiState
 
-    private val dataStore = KateDataStoreImpl(application)
+    private val settings = K8Settings()
 
     fun loadSettings() {
         viewModelScope.launch {
             combine(
-                dataStore.getBooleanPreference(KEY_SOUND),
-                dataStore.getBooleanPreference(KEY_HAPTICS),
-                dataStore.getIntPreference(KEY_THEME),
-                dataStore.getIntPreference(KEY_SPEED)
+                settings.getBooleanSetting(KEY_SOUND),
+                settings.getBooleanSetting(KEY_HAPTICS),
+                settings.getIntSetting(KEY_THEME),
+                settings.getIntSetting(KEY_SPEED)
             ) { sound, haptics, theme, speed ->
                 listOf(
                     Setting.ToggleSetting(
@@ -106,11 +105,11 @@ class SettingViewModel(application: Application) : ViewModel() {
         viewModelScope.launch {
             when (setting) {
                 is Setting.ToggleSetting -> {
-                    dataStore.setBooleanPreference(setting.key, setting.isEnabled)
+                    settings.setBooleanSetting(setting.key, setting.isEnabled)
                 }
 
                 is Setting.MultiOptionSetting -> {
-                    dataStore.setIntPreference(setting.key, setting.optionSelected)
+                    settings.setIntSetting(setting.key, setting.optionSelected)
                 }
 
                 is Setting.TextSetting -> Unit

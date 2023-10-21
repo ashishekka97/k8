@@ -1,9 +1,7 @@
-import org.jetbrains.compose.compose
-
 plugins {
     kotlin("multiplatform")
     kotlin("native.cocoapods")
-    id("org.jetbrains.compose") version "1.2.0"
+    id("org.jetbrains.compose") version "1.5.1"
     id("com.android.library")
 }
 
@@ -15,7 +13,7 @@ repositories {
 }
 
 kotlin {
-    android()
+    androidTarget()
     iosX64()
     iosArm64()
     iosSimulatorArm64()
@@ -54,6 +52,8 @@ kotlin {
             dependencies {
                 api(compose.runtime)
                 api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+                implementation("com.russhwolf:multiplatform-settings:1.1.0")
+                implementation("com.russhwolf:multiplatform-settings-coroutines:1.1.0")
             }
         }
         val commonTest by getting {
@@ -65,9 +65,11 @@ kotlin {
             dependencies {
                 api("androidx.appcompat:appcompat:1.5.1")
                 api("androidx.core:core-ktx:1.9.0")
+                implementation("androidx.datastore:datastore-preferences:1.0.0")
+                implementation("com.russhwolf:multiplatform-settings-datastore:1.1.0")
             }
         }
-        val androidTest by getting {
+        val androidUnitTest by getting {
             dependencies {
                 implementation("junit:junit:4.13.2")
             }
