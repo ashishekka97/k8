@@ -58,18 +58,16 @@ import androidx.core.view.WindowCompat
 import java.util.Locale
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import me.ashishekka.k8.android.data.KEY_HAPTICS
-import me.ashishekka.k8.android.data.KEY_THEME
-import me.ashishekka.k8.android.data.KateDataStoreImpl
 import me.ashishekka.k8.android.theming.fullScaffoldBackground
 import me.ashishekka.k8.android.theming.getThemeColors
 import me.ashishekka.k8.configs.ColorScheme
 import me.ashishekka.k8.core.VideoMemory
+import me.ashishekka.k8.storage.KEY_HAPTICS
+import me.ashishekka.k8.storage.KEY_THEME
 
 class MainActivity : AppCompatActivity() {
 
-    private val viewModel by lazy { MainViewModel(application) }
-    private val dataStore by lazy { KateDataStoreImpl(application) }
+    private val viewModel by lazy { MainViewModel() }
 
     private val toneGenerator by lazy {
         ToneGenerator(
@@ -96,10 +94,14 @@ class MainActivity : AppCompatActivity() {
         setContent {
             val scope = rememberCoroutineScope()
             val snackbarHostState = remember { SnackbarHostState() }
-            val themePreferenceState = dataStore.getIntPreference(KEY_THEME).collectAsState(0)
-            val theme = ColorScheme.getThemeFromIndex(themePreferenceState.value)
-            val hapticFeedbackEnabled =
-                dataStore.getBooleanPreference(KEY_HAPTICS).collectAsState(false)
+
+            val themeState = viewModel.settings.getIntSetting(KEY_THEME).collectAsState(
+                initial = 0
+            )
+            val theme = ColorScheme.getThemeFromIndex(themeState.value)
+            val hapticState = viewModel.settings.getBooleanSetting(KEY_HAPTICS).collectAsState(
+                initial = false
+            )
             maybeShowSnackbar(viewModel.uiState.value.snackMessage) {
                 scope.launch {
                     snackbarHostState.showSnackbar(it, duration = SnackbarDuration.Short)
@@ -110,7 +112,7 @@ class MainActivity : AppCompatActivity() {
                     videoMemory = viewModel.videoMemory,
                     soundState = viewModel.soundState,
                     toneGenerator = toneGenerator,
-                    hapticsState = hapticFeedbackEnabled,
+                    hapticsState = hapticState,
                     snackbarHostState = snackbarHostState,
                     onGameKeyDown = viewModel::onGameKeyDown,
                     onGameKeyUp = viewModel::onGameKeyUp,

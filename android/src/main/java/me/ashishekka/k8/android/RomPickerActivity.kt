@@ -37,24 +37,24 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import me.ashishekka.k8.android.data.KEY_THEME
-import me.ashishekka.k8.android.data.KateDataStoreImpl
 import me.ashishekka.k8.android.theming.fullScaffoldBackground
 import me.ashishekka.k8.android.theming.getThemeColors
 import me.ashishekka.k8.configs.ColorScheme
+import me.ashishekka.k8.storage.K8Settings
+import me.ashishekka.k8.storage.KEY_THEME
 
 const val PICKED_ROM_PATH = "PICKED_ROM_PATH"
 
 class RomPickerActivity : AppCompatActivity() {
 
-    private val dataStore by lazy { KateDataStoreImpl(this.application) }
+    private val setting by lazy { K8Settings() }
 
     private val romFileList: MutableState<List<RomFile>> = mutableStateOf(emptyList())
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
-            val themeState = dataStore.getIntPreference(KEY_THEME).collectAsState(0)
+            val themeState = setting.getIntSetting(KEY_THEME).collectAsState(0)
             val theme = ColorScheme.getThemeFromIndex(themeState.value)
             RomPickerScreen(getThemeColors(theme), romFileList.value, ::onRomFileClicked) {
                 onBackPressedDispatcher.onBackPressed()

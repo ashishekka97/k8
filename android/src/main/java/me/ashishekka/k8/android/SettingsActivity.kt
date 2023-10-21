@@ -42,22 +42,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.view.WindowCompat
-import me.ashishekka.k8.android.data.KEY_THEME
-import me.ashishekka.k8.android.data.KateDataStoreImpl
 import me.ashishekka.k8.android.theming.fullScaffoldBackground
 import me.ashishekka.k8.android.theming.getThemeColors
 import me.ashishekka.k8.android.util.capitalize
 import me.ashishekka.k8.configs.ColorScheme
+import me.ashishekka.k8.storage.K8Settings
+import me.ashishekka.k8.storage.KEY_THEME
 
 class SettingsActivity : AppCompatActivity() {
-    private val viewModel by lazy { SettingViewModel(this.application) }
-    private val dataStore by lazy { KateDataStoreImpl(application) }
+    private val viewModel by lazy { SettingViewModel() }
+    private val settings by lazy { K8Settings() }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             val uiState = viewModel.uiState
-            val themeState = dataStore.getIntPreference(KEY_THEME).collectAsState(0)
+            val themeState = settings.getIntSetting(KEY_THEME).collectAsState(0)
             val theme = ColorScheme.getThemeFromIndex(themeState.value)
             SettingScreen(
                 getThemeColors(theme),
