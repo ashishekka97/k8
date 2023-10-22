@@ -1,27 +1,64 @@
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import me.ashishekka.k8.configs.ColorScheme
+import me.ashishekka.k8.configs.EmulatorSpeed
 import me.ashishekka.k8.core.Chip8
 import me.ashishekka.k8.core.Chip8Impl
 import me.ashishekka.k8.core.KeyEventType.DOWN
 import me.ashishekka.k8.core.KeyEventType.UP
+import me.ashishekka.k8.storage.K8Settings
+import me.ashishekka.k8.storage.KEY_SOUND
+import me.ashishekka.k8.storage.KEY_SPEED
+import me.ashishekka.k8.storage.KEY_THEME
 import org.jetbrains.compose.web.attributes.InputType
-import org.jetbrains.compose.web.css.Color
+import org.jetbrains.compose.web.attributes.selected
+import org.jetbrains.compose.web.css.AlignItems
+import org.jetbrains.compose.web.css.CSSColorValue
+import org.jetbrains.compose.web.css.CSSUnit
+import org.jetbrains.compose.web.css.CSSUnitValueTyped
+import org.jetbrains.compose.web.css.DisplayStyle
+import org.jetbrains.compose.web.css.JustifyContent
+import org.jetbrains.compose.web.css.LineStyle
+import org.jetbrains.compose.web.css.alignItems
+import org.jetbrains.compose.web.css.backgroundColor
+import org.jetbrains.compose.web.css.border
+import org.jetbrains.compose.web.css.color
+import org.jetbrains.compose.web.css.display
 import org.jetbrains.compose.web.css.em
+import org.jetbrains.compose.web.css.flex
+import org.jetbrains.compose.web.css.gridTemplateColumns
+import org.jetbrains.compose.web.css.gridTemplateRows
+import org.jetbrains.compose.web.css.height
+import org.jetbrains.compose.web.css.justifyContent
 import org.jetbrains.compose.web.css.padding
+import org.jetbrains.compose.web.css.px
+import org.jetbrains.compose.web.css.rgba
+import org.jetbrains.compose.web.css.textAlign
+import org.jetbrains.compose.web.css.vw
+import org.jetbrains.compose.web.css.width
 import org.jetbrains.compose.web.dom.Br
-import org.jetbrains.compose.web.dom.Canvas
+import org.jetbrains.compose.web.dom.Button
+import org.jetbrains.compose.web.dom.CheckboxInput
 import org.jetbrains.compose.web.dom.Div
 import org.jetbrains.compose.web.dom.H1
 import org.jetbrains.compose.web.dom.Input
+import org.jetbrains.compose.web.dom.Option
+import org.jetbrains.compose.web.dom.Select
+import org.jetbrains.compose.web.dom.Span
 import org.jetbrains.compose.web.dom.Text
 import org.jetbrains.compose.web.renderComposable
 import org.khronos.webgl.ArrayBuffer
 import org.khronos.webgl.Uint8Array
 import org.khronos.webgl.get
-import org.w3c.dom.CanvasRenderingContext2D
 import org.w3c.dom.events.KeyboardEvent
 import org.w3c.files.File
 import org.w3c.files.FileList
@@ -30,50 +67,247 @@ import org.w3c.files.FileReader.Companion.DONE
 import org.w3c.files.get
 
 fun main() {
-    val scope = CoroutineScope(Dispatchers.Main)
+    val scope = CoroutineScope(Dispatchers.Unconfined)
     val chip8 = Chip8Impl(scope)
     window.onkeydown = { handleKey(it, chip8) }
     window.onkeypress = { handleKey(it, chip8) }
     window.onkeyup = { handleKey(it, chip8) }
-    renderComposable(rootElementId = "root") {
-        MainLayout(chip8)
-    }
-}
 
-@Composable
-fun MainLayout(chip8: Chip8) {
-    val sound = chip8.getSoundState()
-    PlaySound(sound.value)
-    Div({
-        style {
-            property("text-align", "center")
-            padding(1.em)
+    val gridColumnTemplate = columnTemplate()
+    val gridRowTemplate = rowTemplate()
+
+    // Need to find why we can't nest composables within renderComposable
+    renderComposable(rootElementId = "root") {
+        val soundState = chip8.getSoundState()
+        val videoMemory = chip8.getVideoMemoryState()
+        val settings = K8Settings()
+        val themeState = settings.getIntSetting(KEY_THEME).collectAsState(
+            ColorScheme.DEFAULT.ordinal
+        )
+        val speedState = settings.getIntSetting(KEY_SPEED).collectAsState(
+            EmulatorSpeed.FULL.ordinal
+        )
+
+        var sound by remember { mutableStateOf(soundState.value) }
+        var theme by remember {
+            mutableStateOf(ColorScheme.getThemeFromIndex(themeState.value))
         }
-    }) {
-        H1 {
-            Text("K8 (Kate) - Chip 8 emulator")
+        var speed by remember {
+            mutableStateOf(EmulatorSpeed.getSpeedFromIndex(speedState.value))
         }
+        chip8.emulationSpeedFactor(speed.speedFactor)
         Div({
             style {
-                property("text-align", "center")
+                textAlign("center")
+                display(DisplayStyle.Flex)
+                justifyContent(JustifyContent.Center)
+                alignItems(AlignItems.Center)
                 padding(1.em)
+                backgroundColor(theme.background.mapToCssColor())
+                width(CSSUnitValueTyped(100f, CSSUnit.vw))
+                height(CSSUnitValueTyped(100f, CSSUnit.vh))
             }
         }) {
-            Input(InputType.File) {
-                id("file")
-                onChange {
-                    val fileInput = document.getElementById("file")
-                    val files = fileInput.asDynamic().files.unsafeCast<FileList>()
-                    console.log(files)
-                    if (files.length != 0) {
-                        files[0]?.let { readRomFile(it, chip8) }
+            Div {
+                H1({
+                    style {
+                        color(theme.foreground.mapToCssColor())
+                    }
+                }) {
+                    Text("K8 (Kate) - Chip 8 emulator")
+                }
+                Div({
+                    style {
+                        property("text-align", "center")
+                        padding(1.em)
+                    }
+                }) {
+                    Div({
+                        style {
+                            display(DisplayStyle.Flex)
+                        }
+                    }) {
+                        Div({
+                            style {
+                                flex("auto")
+                            }
+                        }) {
+                            Button({
+                                onClick {
+                                    val fileInput = document.getElementById("file")
+                                    val files = fileInput.asDynamic().files.unsafeCast<FileList>()
+                                    console.log(files)
+                                    if (files.length != 0) {
+                                        files[0]?.let { readRomFile(it, chip8) }
+                                    }
+                                }
+                            }) {
+                                Text("Reset ROM")
+                            }
+                        }
+                        Div({
+                            style {
+                                flex("auto")
+                            }
+                        }) {
+                            Span({
+                                style {
+                                    color(theme.foreground.mapToCssColor())
+                                }
+                            }) {
+                                Text("ROM File: ")
+                            }
+                            Input(InputType.File) {
+                                style {
+                                    color(theme.foreground.mapToCssColor())
+                                }
+                                id("file")
+                                onChange {
+                                    val fileInput = document.getElementById("file")
+                                    val files = fileInput.asDynamic().files.unsafeCast<FileList>()
+                                    console.log(files)
+                                    if (files.length != 0) {
+                                        files[0]?.let { readRomFile(it, chip8) }
+                                    }
+                                }
+                            }
+                        }
+                        Div({
+                            style {
+                                flex("auto")
+                            }
+                        }) {
+                            Span({
+                                style {
+                                    color(theme.foreground.mapToCssColor())
+                                }
+                            }) {
+                                Text("Emulate Sound: ")
+                            }
+                            CheckboxInput(checked = sound) {
+                                onChange {
+                                    scope.launch {
+                                        settings.setBooleanSetting(KEY_SOUND, it.value)
+                                        sound = it.value
+                                    }
+                                }
+                            }
+                        }
+                        Div({
+                            style {
+                                flex("auto")
+                            }
+                        }) {
+                            Span({
+                                style {
+                                    color(theme.foreground.mapToCssColor())
+                                }
+                            }) {
+                                Text("Theme: ")
+                            }
+                            Select({
+                                onChange {
+                                    it.value?.let {
+                                        val selectedTheme = ColorScheme.getThemeFromKey(it)
+                                        scope.launch {
+                                            withContext(Dispatchers.Unconfined) {
+                                                settings.setIntSetting(
+                                                    KEY_THEME,
+                                                    selectedTheme.ordinal
+                                                )
+                                                theme = selectedTheme
+                                            }
+                                        }
+                                    }
+                                }
+                            }, multiple = false) {
+                                ColorScheme.values().mapIndexed { index, colorScheme ->
+                                    Option(colorScheme.schemeName, {
+                                        if (index == theme.ordinal) selected()
+                                    }) {
+                                        Text(colorScheme.schemeName)
+                                    }
+                                }
+                            }
+                        }
+                        Div({
+                            style {
+                                flex("auto")
+                            }
+                        }) {
+                            Span({
+                                style {
+                                    color(theme.foreground.mapToCssColor())
+                                }
+                            }) {
+                                Text("Emulation Speed: ")
+                            }
+                            Select({
+                                onChange {
+                                    it.value?.let { option ->
+                                        val selectedSpeed = EmulatorSpeed.getSpeedFromKey(
+                                            option.toFloat()
+                                        )
+                                        scope.launch {
+                                            withContext(Dispatchers.Unconfined) {
+                                                settings.setIntSetting(
+                                                    KEY_SPEED,
+                                                    selectedSpeed.ordinal
+                                                )
+                                                speed = selectedSpeed
+                                            }
+                                        }
+                                    }
+                                }
+                            }, multiple = false) {
+                                EmulatorSpeed.values().mapIndexed { index, emulatorSpeed ->
+                                    Option("${emulatorSpeed.speedFactor}", {
+                                        if (index == theme.ordinal) selected()
+                                    }) {
+                                        Text("${emulatorSpeed.speedFactor}x")
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
+                Br { }
+                Div({
+                    style {
+                        width(64.vw)
+                        height(32.vw)
+                        display(DisplayStyle.Grid)
+                        gridTemplateColumns(gridColumnTemplate)
+                        gridTemplateRows(gridRowTemplate)
+                        border {
+                            style = LineStyle.Solid
+                            color = theme.foreground.mapToCssColor()
+                            width = 2.px
+                        }
+                    }
+                }) {
+                    videoMemory.value.forEachIndexed { _, rowData ->
+                        rowData.forEachIndexed { _, isOn ->
+                            val color = if (isOn) {
+                                theme.foreground.mapToCssColor()
+                            } else {
+                                theme.background.mapToCssColor()
+                            }
+
+                            val width = CSSUnitValueTyped(1f, CSSUnit.vw)
+                            val height = CSSUnitValueTyped(1f, CSSUnit.vw)
+                            Div({
+                                style {
+                                    backgroundColor(color)
+                                    width(width)
+                                    height(height)
+                                }
+                            }) {}
+                        }
+                    }
+                }
+                // TODO Add sound
             }
-        }
-        Br { }
-        Div {
-            Screen(chip8)
         }
     }
 }
@@ -99,43 +333,6 @@ fun readRomFile(file: File, chip8: Chip8) {
         }
     }
 }
-
-@Composable
-fun Screen(chip8: Chip8) {
-    Canvas(
-        attrs = {
-            attr("id", "screen")
-            attr("width", "640")
-            attr("height", "320")
-        }
-    ) {
-        val videoMemory = chip8.getVideoMemoryState()
-        this.DomSideEffect {
-            val blockSize = 10.0
-            val ctx = it.getContext("2d").unsafeCast<CanvasRenderingContext2D>()
-            with(ctx) {
-                videoMemory.value.forEachIndexed { row, rowData ->
-                    rowData.forEachIndexed { col, _ ->
-                        beginPath()
-                        val xx = blockSize * col.toDouble()
-                        val yy = blockSize * row.toDouble()
-                        fillStyle = if (videoMemory.value[row][col]) Color.white else Color.black
-                        rect(xx, yy, blockSize, blockSize)
-                        fill()
-                        closePath()
-                    }
-                }
-            }
-        }
-    }
-}
-
-
-@Composable
-fun PlaySound(play: Boolean) {
-    // TODO -> Add sound later
-}
-
 
 fun handleKey(keyboardEvent: KeyboardEvent, chip8: Chip8) {
     console.log(keyboardEvent)
@@ -168,4 +365,31 @@ fun KeyboardEvent.mapToChip8KeyPad(): Int {
         "KeyV" -> 15
         else -> -1
     }
+}
+
+private fun columnTemplate(): String {
+    val columnBuilder = StringBuilder()
+    for (i in 0 until 64) {
+        columnBuilder.append("1vw")
+        if (i < 63) columnBuilder.append(" ")
+    }
+    return columnBuilder.toString()
+}
+
+private fun rowTemplate(): String {
+    val rowBuilder = StringBuilder()
+    for (i in 0 until 32) {
+        rowBuilder.append("1vw")
+        if (i < 31) rowBuilder.append(" ")
+    }
+    return rowBuilder.toString()
+}
+
+private fun Long.mapToCssColor(): CSSColorValue {
+    val alpha = (this and 0xFF000000) shr 24
+    val red = (this and 0x00FF0000) shr 16
+    val green = (this and 0x0000FF00) shr 8
+    val blue = this and 0x000000FF
+
+    return rgba(red, green, blue, alpha)
 }
