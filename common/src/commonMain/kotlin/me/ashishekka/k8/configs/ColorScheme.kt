@@ -13,11 +13,14 @@ enum class ColorScheme(
     C64("c64", background = 0xff36209b, foreground = 0xFF7664d9);
 
     companion object {
+        val schemeMap = values().associateBy { it.schemeName }
         fun getAllThemes() = values().map { it.schemeName }
         fun getThemeFromIndex(index: Int) = try {
             values()[index]
         } catch (ex: Throwable) {
             DEFAULT
         }
+
+        fun getThemeFromKey(key: String) = schemeMap[key] ?: DEFAULT
     }
 }
