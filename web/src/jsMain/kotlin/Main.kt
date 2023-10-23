@@ -1,4 +1,3 @@
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -8,7 +7,6 @@ import kotlinx.browser.window
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import me.ashishekka.k8.configs.ColorScheme
 import me.ashishekka.k8.configs.EmulatorSpeed
 import me.ashishekka.k8.core.Chip8
@@ -26,6 +24,8 @@ import org.jetbrains.compose.web.css.CSSColorValue
 import org.jetbrains.compose.web.css.CSSUnit
 import org.jetbrains.compose.web.css.CSSUnitValueTyped
 import org.jetbrains.compose.web.css.DisplayStyle
+import org.jetbrains.compose.web.css.FlexDirection
+import org.jetbrains.compose.web.css.FlexWrap
 import org.jetbrains.compose.web.css.JustifyContent
 import org.jetbrains.compose.web.css.LineStyle
 import org.jetbrains.compose.web.css.alignItems
@@ -34,18 +34,20 @@ import org.jetbrains.compose.web.css.border
 import org.jetbrains.compose.web.css.color
 import org.jetbrains.compose.web.css.display
 import org.jetbrains.compose.web.css.em
-import org.jetbrains.compose.web.css.flex
+import org.jetbrains.compose.web.css.flexDirection
+import org.jetbrains.compose.web.css.flexWrap
 import org.jetbrains.compose.web.css.gridTemplateColumns
 import org.jetbrains.compose.web.css.gridTemplateRows
 import org.jetbrains.compose.web.css.height
 import org.jetbrains.compose.web.css.justifyContent
+import org.jetbrains.compose.web.css.marginBottom
+import org.jetbrains.compose.web.css.marginTop
 import org.jetbrains.compose.web.css.padding
 import org.jetbrains.compose.web.css.px
 import org.jetbrains.compose.web.css.rgba
 import org.jetbrains.compose.web.css.textAlign
 import org.jetbrains.compose.web.css.vw
 import org.jetbrains.compose.web.css.width
-import org.jetbrains.compose.web.dom.Br
 import org.jetbrains.compose.web.dom.Button
 import org.jetbrains.compose.web.dom.CheckboxInput
 import org.jetbrains.compose.web.dom.Div
@@ -81,34 +83,36 @@ fun main() {
         val soundState = chip8.getSoundState()
         val videoMemory = chip8.getVideoMemoryState()
         val settings = K8Settings()
-        val themeState = settings.getIntSetting(KEY_THEME).collectAsState(
-            ColorScheme.DEFAULT.ordinal
-        )
-        val speedState = settings.getIntSetting(KEY_SPEED).collectAsState(
-            EmulatorSpeed.FULL.ordinal
-        )
+        val storedTheme = settings.getInt(KEY_THEME)
+        val storedSpeed = settings.getInt(KEY_SPEED)
+        val storedSound = settings.getBoolean(KEY_SOUND)
 
-        var sound by remember { mutableStateOf(soundState.value) }
+        var sound by remember { mutableStateOf(storedSound) }
         var theme by remember {
-            mutableStateOf(ColorScheme.getThemeFromIndex(themeState.value))
+            mutableStateOf(ColorScheme.getThemeFromIndex(storedTheme))
         }
         var speed by remember {
-            mutableStateOf(EmulatorSpeed.getSpeedFromIndex(speedState.value))
+            mutableStateOf(EmulatorSpeed.getSpeedFromIndex(storedSpeed))
         }
         chip8.emulationSpeedFactor(speed.speedFactor)
         Div({
             style {
                 textAlign("center")
-                display(DisplayStyle.Flex)
-                justifyContent(JustifyContent.Center)
-                alignItems(AlignItems.Center)
                 padding(1.em)
+                display(DisplayStyle.Flex)
+                flexDirection(FlexDirection.Column)
+                justifyContent(JustifyContent.FlexStart)
                 backgroundColor(theme.background.mapToCssColor())
                 width(CSSUnitValueTyped(100f, CSSUnit.vw))
                 height(CSSUnitValueTyped(100f, CSSUnit.vh))
             }
         }) {
-            Div {
+            Div({
+                style {
+                    property("margin-left", "auto")
+                    property("margin-right", "auto")
+                }
+            }) {
                 H1({
                     style {
                         color(theme.foreground.mapToCssColor())
@@ -116,198 +120,182 @@ fun main() {
                 }) {
                     Text("K8 (Kate) - Chip 8 emulator")
                 }
-                Div({
-                    style {
-                        property("text-align", "center")
-                        padding(1.em)
-                    }
-                }) {
-                    Div({
-                        style {
-                            display(DisplayStyle.Flex)
-                        }
-                    }) {
-                        Div({
-                            style {
-                                flex("auto")
-                            }
-                        }) {
-                            Button({
-                                onClick {
-                                    val fileInput = document.getElementById("file")
-                                    val files = fileInput.asDynamic().files.unsafeCast<FileList>()
-                                    console.log(files)
-                                    if (files.length != 0) {
-                                        files[0]?.let { readRomFile(it, chip8) }
-                                    }
-                                }
-                            }) {
-                                Text("Reset ROM")
-                            }
-                        }
-                        Div({
-                            style {
-                                flex("auto")
-                            }
-                        }) {
-                            Span({
-                                style {
-                                    color(theme.foreground.mapToCssColor())
-                                }
-                            }) {
-                                Text("ROM File: ")
-                            }
-                            Input(InputType.File) {
-                                style {
-                                    color(theme.foreground.mapToCssColor())
-                                }
-                                id("file")
-                                onChange {
-                                    val fileInput = document.getElementById("file")
-                                    val files = fileInput.asDynamic().files.unsafeCast<FileList>()
-                                    console.log(files)
-                                    if (files.length != 0) {
-                                        files[0]?.let { readRomFile(it, chip8) }
-                                    }
-                                }
-                            }
-                        }
-                        Div({
-                            style {
-                                flex("auto")
-                            }
-                        }) {
-                            Span({
-                                style {
-                                    color(theme.foreground.mapToCssColor())
-                                }
-                            }) {
-                                Text("Emulate Sound: ")
-                            }
-                            CheckboxInput(checked = sound) {
-                                onChange {
-                                    scope.launch {
-                                        settings.setBooleanSetting(KEY_SOUND, it.value)
-                                        sound = it.value
-                                    }
-                                }
-                            }
-                        }
-                        Div({
-                            style {
-                                flex("auto")
-                            }
-                        }) {
-                            Span({
-                                style {
-                                    color(theme.foreground.mapToCssColor())
-                                }
-                            }) {
-                                Text("Theme: ")
-                            }
-                            Select({
-                                onChange {
-                                    it.value?.let {
-                                        val selectedTheme = ColorScheme.getThemeFromKey(it)
-                                        scope.launch {
-                                            withContext(Dispatchers.Unconfined) {
-                                                settings.setIntSetting(
-                                                    KEY_THEME,
-                                                    selectedTheme.ordinal
-                                                )
-                                                theme = selectedTheme
-                                            }
-                                        }
-                                    }
-                                }
-                            }, multiple = false) {
-                                ColorScheme.values().mapIndexed { index, colorScheme ->
-                                    Option(colorScheme.schemeName, {
-                                        if (index == theme.ordinal) selected()
-                                    }) {
-                                        Text(colorScheme.schemeName)
-                                    }
-                                }
-                            }
-                        }
-                        Div({
-                            style {
-                                flex("auto")
-                            }
-                        }) {
-                            Span({
-                                style {
-                                    color(theme.foreground.mapToCssColor())
-                                }
-                            }) {
-                                Text("Emulation Speed: ")
-                            }
-                            Select({
-                                onChange {
-                                    it.value?.let { option ->
-                                        val selectedSpeed = EmulatorSpeed.getSpeedFromKey(
-                                            option.toFloat()
-                                        )
-                                        scope.launch {
-                                            withContext(Dispatchers.Unconfined) {
-                                                settings.setIntSetting(
-                                                    KEY_SPEED,
-                                                    selectedSpeed.ordinal
-                                                )
-                                                speed = selectedSpeed
-                                            }
-                                        }
-                                    }
-                                }
-                            }, multiple = false) {
-                                EmulatorSpeed.values().mapIndexed { index, emulatorSpeed ->
-                                    Option("${emulatorSpeed.speedFactor}", {
-                                        if (index == theme.ordinal) selected()
-                                    }) {
-                                        Text("${emulatorSpeed.speedFactor}x")
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                Br { }
-                Div({
-                    style {
-                        width(64.vw)
-                        height(32.vw)
-                        display(DisplayStyle.Grid)
-                        gridTemplateColumns(gridColumnTemplate)
-                        gridTemplateRows(gridRowTemplate)
-                        border {
-                            style = LineStyle.Solid
-                            color = theme.foreground.mapToCssColor()
-                            width = 2.px
-                        }
-                    }
-                }) {
-                    videoMemory.value.forEachIndexed { _, rowData ->
-                        rowData.forEachIndexed { _, isOn ->
-                            val color = if (isOn) {
-                                theme.foreground.mapToCssColor()
-                            } else {
-                                theme.background.mapToCssColor()
-                            }
-
-                            val width = CSSUnitValueTyped(1f, CSSUnit.vw)
-                            val height = CSSUnitValueTyped(1f, CSSUnit.vw)
-                            Div({
-                                style {
-                                    backgroundColor(color)
-                                    width(width)
-                                    height(height)
-                                }
-                            }) {}
-                        }
-                    }
-                }
-                // TODO Add sound
             }
+            Div({
+                style {
+                    width(64.vw)
+                    property("margin-left", "auto")
+                    property("margin-right", "auto")
+                }
+            }) {
+                Div({
+                    style {
+                        display(DisplayStyle.Flex)
+                        alignItems(AlignItems.Center)
+                        justifyContent(JustifyContent.SpaceBetween)
+                        flexWrap(FlexWrap.Wrap)
+                    }
+                }) {
+                    Div {
+                        Button({
+                            onClick {
+                                val fileInput = document.getElementById("file")
+                                val files = fileInput.asDynamic().files.unsafeCast<FileList>()
+                                console.log(files)
+                                if (files.length != 0) {
+                                    files[0]?.let { readRomFile(it, chip8) }
+                                }
+                            }
+                        }) {
+                            Text("Reset")
+                        }
+                    }
+                    Div {
+                        Span({
+                            style {
+                                color(theme.foreground.mapToCssColor())
+                            }
+                        }) {
+                            Text("ROM: ")
+                        }
+                        Input(InputType.File) {
+                            style {
+                                color(theme.foreground.mapToCssColor())
+                            }
+                            id("file")
+                            onChange {
+                                val fileInput = document.getElementById("file")
+                                val files = fileInput.asDynamic().files.unsafeCast<FileList>()
+                                console.log(files)
+                                if (files.length != 0) {
+                                    files[0]?.let { readRomFile(it, chip8) }
+                                }
+                            }
+                        }
+                    }
+                    Div {
+                        Span({
+                            style {
+                                color(theme.foreground.mapToCssColor())
+                            }
+                        }) {
+                            Text("Emulate Sound: ")
+                        }
+                        CheckboxInput(checked = sound) {
+                            onChange {
+                                scope.launch {
+                                    settings.setBooleanSetting(KEY_SOUND, it.value)
+                                    sound = it.value
+                                }
+                            }
+                        }
+                    }
+                    Div {
+                        Span({
+                            style {
+                                color(theme.foreground.mapToCssColor())
+                            }
+                        }) {
+                            Text("Theme: ")
+                        }
+                        Select({
+                            onChange {
+                                it.value?.let {
+                                    val selectedTheme = ColorScheme.getThemeFromKey(it)
+                                    scope.launch {
+                                        settings.setIntSetting(
+                                            KEY_THEME,
+                                            selectedTheme.ordinal
+                                        )
+                                        theme = selectedTheme
+                                    }
+                                }
+                            }
+                        }, multiple = false) {
+                            ColorScheme.values().mapIndexed { index, colorScheme ->
+                                Option(colorScheme.schemeName, {
+                                    if (index == theme.ordinal) selected()
+                                }) {
+                                    Text(colorScheme.schemeName)
+                                }
+                            }
+                        }
+                    }
+                    Div {
+                        Span({
+                            style {
+                                color(theme.foreground.mapToCssColor())
+                            }
+                        }) {
+                            Text("Emulation Speed: ")
+                        }
+                        Select({
+                            onChange {
+                                it.value?.let { option ->
+                                    val selectedSpeed = EmulatorSpeed.getSpeedFromKey(
+                                        option.toFloat()
+                                    )
+                                    scope.launch {
+                                        settings.setIntSetting(
+                                            KEY_SPEED,
+                                            selectedSpeed.ordinal
+                                        )
+                                        speed = selectedSpeed
+                                    }
+                                }
+                            }
+                        }, multiple = false) {
+                            EmulatorSpeed.values().mapIndexed { index, emulatorSpeed ->
+                                Option("${emulatorSpeed.speedFactor}", {
+                                    if (index == speed.ordinal) selected()
+                                }) {
+                                    Text("${emulatorSpeed.speedFactor}x")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            Div({
+                style {
+                    property("margin-left", "auto")
+                    marginTop(1.em)
+                    property("margin-right", "auto")
+                    marginBottom(1.em)
+                    textAlign("center")
+                    width(64.vw)
+                    height(32.vw)
+                    display(DisplayStyle.Grid)
+                    gridTemplateColumns(gridColumnTemplate)
+                    gridTemplateRows(gridRowTemplate)
+                    border {
+                        style = LineStyle.Solid
+                        color = theme.foreground.mapToCssColor()
+                        width = 2.px
+                    }
+                }
+            }) {
+                videoMemory.value.forEachIndexed { _, rowData ->
+                    rowData.forEachIndexed { _, isOn ->
+                        val color = if (isOn) {
+                            theme.foreground.mapToCssColor()
+                        } else {
+                            theme.background.mapToCssColor()
+                        }
+
+                        val width = CSSUnitValueTyped(1f, CSSUnit.vw)
+                        val height = CSSUnitValueTyped(1f, CSSUnit.vw)
+                        Div({
+                            style {
+                                backgroundColor(color)
+                                width(width)
+                                height(height)
+                            }
+                        }) {}
+                    }
+                }
+            }
+            // TODO Add sound
         }
     }
 }

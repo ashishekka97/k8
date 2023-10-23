@@ -54,7 +54,7 @@ class RomPickerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
-            val themeState = setting.getIntSetting(KEY_THEME).collectAsState(0)
+            val themeState = setting.getIntFlowSetting(KEY_THEME).collectAsState(0)
             val theme = ColorScheme.getThemeFromIndex(themeState.value)
             RomPickerScreen(getThemeColors(theme), romFileList.value, ::onRomFileClicked) {
                 onBackPressedDispatcher.onBackPressed()

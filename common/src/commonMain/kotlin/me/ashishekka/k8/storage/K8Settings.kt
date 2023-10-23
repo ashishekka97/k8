@@ -10,11 +10,16 @@ const val KEY_SPEED = "speed"
 const val KEY_VERSION = "version"
 
 expect class K8Settings {
-    fun getBooleanSetting(key: String): Flow<Boolean>
+
+    suspend fun getBooleanSetting(key: String): Boolean
+
+    fun getBooleanFlowSetting(key: String): Flow<Boolean>
 
     suspend fun setBooleanSetting(key: String, value: Boolean)
 
-    fun getIntSetting(key: String): Flow<Int>
+    suspend fun getIntSetting(key: String): Int
+
+    fun getIntFlowSetting(key: String): Flow<Int>
 
     suspend fun setIntSetting(key: String, value: Int)
 }

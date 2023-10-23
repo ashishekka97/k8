@@ -8,10 +8,9 @@ import com.russhwolf.settings.datastore.DataStoreSettings
 import kotlinx.coroutines.flow.Flow
 
 actual class K8Settings {
-
     val dataStoreSettings = DataStoreSettings(K8DataStore.get())
 
-    actual fun getBooleanSetting(key: String): Flow<Boolean> {
+    actual fun getBooleanFlowSetting(key: String): Flow<Boolean> {
         return dataStoreSettings.getBooleanFlow(key, false)
     }
 
@@ -19,12 +18,20 @@ actual class K8Settings {
         dataStoreSettings.putBoolean(key, value)
     }
 
-    actual fun getIntSetting(key: String): Flow<Int> {
+    actual fun getIntFlowSetting(key: String): Flow<Int> {
         return dataStoreSettings.getIntFlow(key, 0)
     }
 
     actual suspend fun setIntSetting(key: String, value: Int) {
         dataStoreSettings.putInt(key, value)
+    }
+
+    actual suspend fun getBooleanSetting(key: String): Boolean {
+        return dataStoreSettings.getBoolean(key, false)
+    }
+
+    actual suspend fun getIntSetting(key: String): Int {
+        return dataStoreSettings.getInt(key, 0)
     }
 }
 

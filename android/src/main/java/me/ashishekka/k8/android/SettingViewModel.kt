@@ -27,10 +27,10 @@ class SettingViewModel : ViewModel() {
     fun loadSettings() {
         viewModelScope.launch {
             combine(
-                settings.getBooleanSetting(KEY_SOUND),
-                settings.getBooleanSetting(KEY_HAPTICS),
-                settings.getIntSetting(KEY_THEME),
-                settings.getIntSetting(KEY_SPEED)
+                settings.getBooleanFlowSetting(KEY_SOUND),
+                settings.getBooleanFlowSetting(KEY_HAPTICS),
+                settings.getIntFlowSetting(KEY_THEME),
+                settings.getIntFlowSetting(KEY_SPEED)
             ) { sound, haptics, theme, speed ->
                 listOf(
                     Setting.ToggleSetting(

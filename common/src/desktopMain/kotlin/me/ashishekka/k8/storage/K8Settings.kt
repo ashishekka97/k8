@@ -8,7 +8,7 @@ actual class K8Settings {
 
     val preferences = PreferencesSettings.Factory().create(SETTINGS_NAME).toFlowSettings()
 
-    actual fun getBooleanSetting(key: String): Flow<Boolean> {
+    actual fun getBooleanFlowSetting(key: String): Flow<Boolean> {
         return preferences.getBooleanFlow(key, false)
     }
 
@@ -16,11 +16,19 @@ actual class K8Settings {
         preferences.putBoolean(key, value)
     }
 
-    actual fun getIntSetting(key: String): Flow<Int> {
+    actual fun getIntFlowSetting(key: String): Flow<Int> {
         return preferences.getIntFlow(key, 0)
     }
 
     actual suspend fun setIntSetting(key: String, value: Int) {
         preferences.putInt(key, value)
+    }
+
+    actual suspend fun getBooleanSetting(key: String): Boolean {
+        return preferences.getBoolean(key, false)
+    }
+
+    actual suspend fun getIntSetting(key: String): Int {
+        return preferences.getInt(key, 0)
     }
 }
