@@ -95,11 +95,11 @@ class MainActivity : AppCompatActivity() {
             val scope = rememberCoroutineScope()
             val snackbarHostState = remember { SnackbarHostState() }
 
-            val themeState = viewModel.settings.getIntSetting(KEY_THEME).collectAsState(
+            val themeState = viewModel.settings.getIntFlowSetting(KEY_THEME).collectAsState(
                 initial = 0
             )
             val theme = ColorScheme.getThemeFromIndex(themeState.value)
-            val hapticState = viewModel.settings.getBooleanSetting(KEY_HAPTICS).collectAsState(
+            val hapticState = viewModel.settings.getBooleanFlowSetting(KEY_HAPTICS).collectAsState(
                 initial = false
             )
             maybeShowSnackbar(viewModel.uiState.value.snackMessage) {

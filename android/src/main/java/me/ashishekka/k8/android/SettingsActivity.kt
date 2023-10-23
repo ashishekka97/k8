@@ -57,7 +57,7 @@ class SettingsActivity : AppCompatActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             val uiState = viewModel.uiState
-            val themeState = settings.getIntSetting(KEY_THEME).collectAsState(0)
+            val themeState = settings.getIntFlowSetting(KEY_THEME).collectAsState(0)
             val theme = ColorScheme.getThemeFromIndex(themeState.value)
             SettingScreen(
                 getThemeColors(theme),

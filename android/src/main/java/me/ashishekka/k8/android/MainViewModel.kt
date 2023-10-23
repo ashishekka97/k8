@@ -60,13 +60,13 @@ class MainViewModel : ViewModel() {
 
     fun observeUiState() {
         viewModelScope.launch {
-            settings.getIntSetting(KEY_SPEED).collectLatest { speedIndex ->
+            settings.getIntFlowSetting(KEY_SPEED).collectLatest { speedIndex ->
                 val speed = EmulatorSpeed.getSpeedFromIndex(speedIndex)
                 chip8.emulationSpeedFactor(speed.speedFactor)
             }
         }
         viewModelScope.launch {
-            settings.getBooleanSetting(KEY_SOUND).collectLatest { soundEnabled ->
+            settings.getBooleanFlowSetting(KEY_SOUND).collectLatest { soundEnabled ->
                 chip8.toggleSound(soundEnabled)
             }
         }

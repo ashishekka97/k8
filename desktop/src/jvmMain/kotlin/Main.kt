@@ -46,9 +46,9 @@ fun main() = application {
         resizable = false,
         onKeyEvent = { keyEvent -> onKeyEvent(keyEvent, chip8) }
     ) {
-        val themeState = settings.getIntSetting(KEY_THEME).collectAsState(DEFAULT.ordinal)
-        val speedState = settings.getIntSetting(KEY_SPEED).collectAsState(FULL.ordinal)
-        val soundState = settings.getBooleanSetting(KEY_SOUND).collectAsState(false)
+        val themeState = settings.getIntFlowSetting(KEY_THEME).collectAsState(DEFAULT.ordinal)
+        val speedState = settings.getIntFlowSetting(KEY_SPEED).collectAsState(FULL.ordinal)
+        val soundState = settings.getBooleanFlowSetting(KEY_SOUND).collectAsState(false)
 
         val theme = ColorScheme.getThemeFromIndex(themeState.value)
         val speed = EmulatorSpeed.getSpeedFromIndex(speedState.value)
