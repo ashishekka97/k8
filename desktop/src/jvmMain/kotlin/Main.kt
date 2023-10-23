@@ -43,7 +43,6 @@ fun main() = application {
         onCloseRequest = ::exitApplication,
         state = rememberWindowState(size = DpSize(640.dp, 348.dp)),
         title = "K8 (Kate) - Chip 8 Emulator",
-        resizable = false,
         onKeyEvent = { keyEvent -> onKeyEvent(keyEvent, chip8) }
     ) {
         val themeState = settings.getIntFlowSetting(KEY_THEME).collectAsState(DEFAULT.ordinal)
