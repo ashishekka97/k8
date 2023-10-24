@@ -1,6 +1,7 @@
 package me.ashishekka.k8.android
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -44,6 +45,7 @@ class MainViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO + coroutineExceptionHandler) {
             val romFile = context.assets.open(filePath)
             val romData = romFile.readBytes()
+            Log.d("Bytes", "$romData.")
             chip8.loadRom(romData)
             chip8.start()
             _uiState.value = UiState(

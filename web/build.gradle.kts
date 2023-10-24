@@ -32,3 +32,8 @@ kotlin {
         }
     }
 }
+
+// Workaround for https://slack-chats.kotlinlang.org/t/13166318/i-m-playing-around-with-compose-multiplatform-using-the-temp
+task("testClasses").doLast {
+    println("This is a dummy testClasses task")
+}

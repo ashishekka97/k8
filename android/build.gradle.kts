@@ -39,4 +39,5 @@ android {
             isMinifyEnabled = false
         }
     }
+    namespace = "me.ashishekka.k8.android"
 }

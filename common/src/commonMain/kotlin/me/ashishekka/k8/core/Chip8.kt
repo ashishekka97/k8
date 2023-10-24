@@ -4,11 +4,18 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.neverEqualPolicy
+import com.rickclephas.kmp.nativecoroutines.NativeCoroutineScope
+import com.rickclephas.kmp.nativecoroutines.NativeCoroutines
 import kotlin.math.roundToLong
+import kotlinx.atomicfu.AtomicBoolean
+import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 
 interface Chip8 {
@@ -37,9 +44,21 @@ interface Chip8 {
     fun getVideoMemoryState(): State<VideoMemory>
 
     /**
+     * Expose the VRAM updates as flow
+     */
+    @NativeCoroutines
+    fun getVideoMemoryFlow(): Flow<VideoMemory>
+
+    /**
      * Expose the sound updates as State
      */
     fun getSoundState(): State<Boolean>
+
+    /**
+     * Expose the sound updates sas flow
+     */
+    @NativeCoroutines
+    fun getSoundFlow(): Flow<Boolean>
 
     /**
      * Expose running state
@@ -56,7 +75,12 @@ interface Chip8 {
     fun toggleSound(isEnabled: Boolean)
 }
 
-class Chip8Impl(private val scope: CoroutineScope, romBytes: ByteArray? = null) : Chip8 {
+class Chip8Impl(
+    @NativeCoroutineScope val scope: CoroutineScope,
+    romBytes: ByteArray? = null
+) : Chip8 {
+
+    constructor() : this(scope = CoroutineScope(SupervisorJob() + Dispatchers.Default))
 
     private val cpuClockHz: Long = 1000
     private var speedFactor: Float = 1.0f
@@ -64,6 +88,9 @@ class Chip8Impl(private val scope: CoroutineScope, romBytes: ByteArray? = null) 
     private val timerClockHz: Long = 60
     private var cpuClockJob: Job? = null
     private var timerJob: Job? = null
+
+    private val atomicScreenUpdate: AtomicBoolean = atomic(false)
+    private val atomicSoundUpdate: AtomicBoolean = atomic(false)
 
     private val memory = Memory(4096) { 0u }
     private val videoMemory = VideoMemory(32) { BooleanArray(64) }
@@ -80,6 +107,7 @@ class Chip8Impl(private val scope: CoroutineScope, romBytes: ByteArray? = null) 
     init {
         cpu = Cpu(memory, videoMemory, keypad) {
             videoMemoryState.value = it
+            atomicScreenUpdate.compareAndSet(expect = false, update = true)
         }
         if (romBytes != null) {
             loadRom(romBytes)
@@ -145,8 +173,34 @@ class Chip8Impl(private val scope: CoroutineScope, romBytes: ByteArray? = null) 
         return videoMemoryState
     }
 
+    override fun getVideoMemoryFlow(): Flow<VideoMemory> {
+        return flow {
+            while (true) {
+                if (atomicScreenUpdate.value) {
+                    emit(videoMemory)
+                    atomicScreenUpdate.compareAndSet(true, false)
+                } else {
+                    delay(16)
+                }
+            }
+        }
+    }
+
     override fun getSoundState(): State<Boolean> {
         return derivedStateOf { soundState.value && soundEnabled }
+    }
+
+    override fun getSoundFlow(): Flow<Boolean> {
+        return flow {
+            while (true) {
+                if (atomicSoundUpdate.value) {
+                    emit(true)
+                    atomicSoundUpdate.compareAndSet(true, false)
+                } else {
+                    delay(16)
+                }
+            }
+        }
     }
 
     override fun isRunning(): Boolean {

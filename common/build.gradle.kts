@@ -1,6 +1,10 @@
+@file:Suppress("OPT_IN_USAGE")
+
 plugins {
     kotlin("multiplatform")
     kotlin("native.cocoapods")
+    id("com.google.devtools.ksp") version "1.8.10-1.0.9"
+    id("com.rickclephas.kmp.nativecoroutines") version "1.0.0-ALPHA-18"
     id("org.jetbrains.compose") version "1.5.1"
     id("com.android.library")
 }
@@ -22,6 +26,7 @@ kotlin {
             kotlinOptions.jvmTarget = "11"
         }
     }
+
     js(IR) {
         browser {
             testTask {
@@ -34,11 +39,12 @@ kotlin {
         }
         binaries.executable()
     }
+
     cocoapods {
-        summary = "Some description for the common Module"
+        summary = "Core implementation of the Chip8 emulator and additional common APIs"
         homepage = "Link to the Common Module homepage"
         version = "1.0"
-        ios.deploymentTarget = "14.1"
+        ios.deploymentTarget = "15.0"
         podfile = project.file("../ios/Podfile")
         framework {
             baseName = "common"
@@ -47,13 +53,16 @@ kotlin {
     sourceSets {
         all {
             languageSettings.optIn("kotlin.ExperimentalUnsignedTypes")
+            languageSettings.optIn("kotlin.experimental.ExperimentalObjCName")
+            languageSettings.optIn("com.russhwolf.settings.ExperimentalSettingsApi::class")
         }
         val commonMain by getting {
             dependencies {
                 api(compose.runtime)
-                api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+                api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
                 implementation("com.russhwolf:multiplatform-settings:1.1.0")
                 implementation("com.russhwolf:multiplatform-settings-coroutines:1.1.0")
+                implementation("org.jetbrains.kotlinx:atomicfu:0.21.0")
             }
         }
         val commonTest by getting {
@@ -85,18 +94,12 @@ kotlin {
         val iosSimulatorArm64Main by getting
         val iosMain by creating {
             dependsOn(commonMain)
-            iosX64Main.dependsOn(this)
-            iosArm64Main.dependsOn(this)
-            iosSimulatorArm64Main.dependsOn(this)
         }
         val iosX64Test by getting
         val iosArm64Test by getting
         val iosSimulatorArm64Test by getting
         val iosTest by creating {
             dependsOn(commonTest)
-            iosX64Test.dependsOn(this)
-            iosArm64Test.dependsOn(this)
-            iosSimulatorArm64Test.dependsOn(this)
         }
     }
 }
@@ -112,4 +115,10 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+    namespace = "me.ashishekka.k8"
+}
+
+// Workaround for https://slack-chats.kotlinlang.org/t/13166318/i-m-playing-around-with-compose-multiplatform-using-the-temp
+task("testClasses").doLast {
+    println("This is a dummy testClasses task")
 }

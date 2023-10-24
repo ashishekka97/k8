@@ -1,5 +1,5 @@
 Pod::Spec.new do |spec|
-    spec.name                     = 'common'
+    spec.name                     = 'K8CocoaPod'
     spec.version                  = '1.0'
     spec.homepage                 = 'Link to the Common Module homepage'
     spec.source                   = { :http=> ''}
@@ -8,7 +8,7 @@ Pod::Spec.new do |spec|
     spec.summary                  = 'Core implementation of the Chip8 emulator and additional common APIs'
     spec.vendored_frameworks      = 'build/cocoapods/framework/common.framework'
     spec.libraries                = 'c++'
-    spec.ios.deployment_target = '15.0'
+                
                 
                 
     spec.pod_target_xcconfig = {
@@ -18,7 +18,7 @@ Pod::Spec.new do |spec|
                 
     spec.script_phases = [
         {
-            :name => 'Build common',
+            :name => 'Build K8CocoaPod',
             :execution_position => :before_compile,
             :shell_path => '/bin/sh',
             :script => <<-SCRIPT
