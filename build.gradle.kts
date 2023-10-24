@@ -1,3 +1,7 @@
+plugins {
+    id("org.jetbrains.compose") version "1.5.1"
+}
+
 buildscript {
     repositories {
         gradlePluginPortal()

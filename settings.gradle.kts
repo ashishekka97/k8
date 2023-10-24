@@ -7,7 +7,7 @@ pluginManagement {
     }
 }
 rootProject.name = "k8"
-include("common")
-include("desktop")
-include("android")
-include("web")
+include(":common")
+include(":desktop")
+include(":android")
+include(":web")
