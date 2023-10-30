@@ -7,22 +7,24 @@
 //
 
 import SwiftUI
+import common
 
 struct Screen: View {
-    @State var screenState: ScreenState
+    @StateObject var viewModel: MainViewModel
     var body: some View {
-        Canvas(rendersAsynchronously: true) { context, size in
-            let gridTileWidth: CGFloat = size.width / CGFloat(screenState.state[0].count)
-            let gridTileHeight: CGFloat = size.height / CGFloat(screenState.state.count)
+        Canvas(rendersAsynchronously: false) { context, size in
+            let gridTileWidth: CGFloat = size.width / CGFloat(64)
+            let gridTileHeight: CGFloat = size.height / CGFloat(32)
             
-            screenState.state.indices.forEach { rowIndex in
-                screenState.state[rowIndex].indices.forEach { colIndex in
+            viewModel.vRam.indices.forEach { rowIndex in
+                viewModel.vRam[rowIndex].indices.forEach { colIndex in
                     let xx = CGFloat(colIndex) * gridTileWidth
                     let yy = CGFloat(rowIndex) * gridTileHeight
-                    let color = if(screenState.state[rowIndex][colIndex]) {
-                        screenState.foregroundColor
-                    } else {
-                        screenState.backgroundColor
+                    let color = if(viewModel.vRam[rowIndex][colIndex]) {
+                        Color.white
+                    }
+                    else {
+                        Color.black
                     }
                     context.fill(
                         Path(
@@ -38,11 +40,13 @@ struct Screen: View {
                 }
             }
         }
-        .aspectRatio(CGFloat(screenState.state[0].count) / CGFloat(screenState.state.count), contentMode: .fit)
+        .aspectRatio(CGFloat(64) / CGFloat(32), contentMode: .fit)
         .padding()
     }
 }
 
-#Preview {
-    Screen(screenState: ScreenState(state: [[Bool]](repeating: [Bool](repeating: Bool.random(), count: 64), count: 32), foregroundColor: Color.white, backgroundColor: Color.black))
+struct Screen_Preview : PreviewProvider {
+    static var previews: some View {
+        Screen(viewModel: MainViewModel(chip8: Chip8Impl()))
+    }
 }

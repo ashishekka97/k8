@@ -19,6 +19,7 @@
 		2EC1662C2AE7F73700B12C8D /* invader.ch8 in Resources */ = {isa = PBXBuildFile; fileRef = 2EC1662B2AE7F73700B12C8D /* invader.ch8 */; };
 		2EC1662E2AE8070100B12C8D /* Screen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EC1662D2AE8070100B12C8D /* Screen.swift */; };
 		2EC166302AE8083600B12C8D /* ScreenState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EC1662F2AE8083600B12C8D /* ScreenState.swift */; };
+		2EC166322AF005F200B12C8D /* KeyPad.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EC166312AF005F200B12C8D /* KeyPad.swift */; };
 		7555FF83242A565900829871 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7555FF82242A565900829871 /* ContentView.swift */; };
 /* End PBXBuildFile section */
 
@@ -30,6 +31,7 @@
 		2EC1662B2AE7F73700B12C8D /* invader.ch8 */ = {isa = PBXFileReference; lastKnownFileType = text; path = invader.ch8; sourceTree = "<group>"; };
 		2EC1662D2AE8070100B12C8D /* Screen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Screen.swift; sourceTree = "<group>"; };
 		2EC1662F2AE8083600B12C8D /* ScreenState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenState.swift; sourceTree = "<group>"; };
+		2EC166312AF005F200B12C8D /* KeyPad.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyPad.swift; sourceTree = "<group>"; };
 		3D9CBDAF024E49AD9B4310AA /* Pods-iosApp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iosApp.debug.xcconfig"; path = "Target Support Files/Pods-iosApp/Pods-iosApp.debug.xcconfig"; sourceTree = "<group>"; };
 		7542E5E618568CB3A61BAA35 /* Pods-iosApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iosApp.release.xcconfig"; path = "Target Support Files/Pods-iosApp/Pods-iosApp.release.xcconfig"; sourceTree = "<group>"; };
 		7555FF7B242A565900829871 /* iosApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -116,6 +118,7 @@
 				2152FB032600AC8F00CF470E /* iOSApp.swift */,
 				058557D7273AAEEB004C7B11 /* Preview Content */,
 				2EC1662D2AE8070100B12C8D /* Screen.swift */,
+				2EC166312AF005F200B12C8D /* KeyPad.swift */,
 				2EC1662F2AE8083600B12C8D /* ScreenState.swift */,
 			);
 			path = iosApp;
@@ -264,6 +267,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2EC166302AE8083600B12C8D /* ScreenState.swift in Sources */,
+				2EC166322AF005F200B12C8D /* KeyPad.swift in Sources */,
 				2152FB042600AC8F00CF470E /* iOSApp.swift in Sources */,
 				7555FF83242A565900829871 /* ContentView.swift in Sources */,
 				2EC1661F2AE7D7A300B12C8D /* MainViewModel.swift in Sources */,

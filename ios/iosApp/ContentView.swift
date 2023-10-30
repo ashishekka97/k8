@@ -4,39 +4,42 @@ import common
 struct ContentView: View {
     @StateObject var viewModel = MainViewModel(chip8: Chip8Impl())
 	var body: some View {
-        Canvas(rendersAsynchronously: false) { context, size in
-            let gridTileWidth: CGFloat = size.width / CGFloat(64)
-            let gridTileHeight: CGFloat = size.height / CGFloat(32)
-            
-            viewModel.vRam.indices.forEach { rowIndex in
-                viewModel.vRam[rowIndex].indices.forEach { colIndex in
-                    let xx = CGFloat(colIndex) * gridTileWidth
-                    let yy = CGFloat(rowIndex) * gridTileHeight
-                    let color = if(viewModel.vRam[rowIndex][colIndex]) {
-                        Color.white
+        NavigationView {
+            VStack(alignment: .leading) {
+                Screen(viewModel: viewModel)
+                .task {
+                    viewModel.loadAndStart()
+                    await viewModel.startObservingVRam()
+                }
+                Spacer()
+                KeyPad()
+            }
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Text("K8 (Kate)")
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        print("Load")
+                    } label: {
+                        Image(systemName: "filemenu.and.selection")
                     }
-                    else {
-                        Color.black
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        print("Reset")
+                    } label: {
+                        Image(systemName: "arrow.circlepath")
                     }
-                    context.fill(
-                        Path(
-                            CGRect(
-                                x: xx,
-                                y: yy,
-                                width: gridTileWidth,
-                                height: gridTileHeight
-                            )
-                        )
-                        , with: .color(color)
-                    )
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        print("Settings")
+                    } label: {
+                        Image(systemName: "gearshape")
+                    }
                 }
             }
-        }
-        .aspectRatio(CGFloat(64) / CGFloat(32), contentMode: .fit)
-        .padding()
-        .task {
-            viewModel.loadAndStart()
-            await viewModel.startObservingVRam()
         }
 	}
 }
