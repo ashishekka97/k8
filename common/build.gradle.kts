@@ -54,7 +54,7 @@ kotlin {
         all {
             languageSettings.optIn("kotlin.ExperimentalUnsignedTypes")
             languageSettings.optIn("kotlin.experimental.ExperimentalObjCName")
-            languageSettings.optIn("com.russhwolf.settings.ExperimentalSettingsApi::class")
+            languageSettings.optIn("com.russhwolf.settings.ExperimentalSettingsApi")
         }
         val commonMain by getting {
             dependencies {
