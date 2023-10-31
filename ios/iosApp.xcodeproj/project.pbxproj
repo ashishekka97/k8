@@ -20,6 +20,9 @@
 		2EC1662E2AE8070100B12C8D /* Screen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EC1662D2AE8070100B12C8D /* Screen.swift */; };
 		2EC166302AE8083600B12C8D /* ScreenState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EC1662F2AE8083600B12C8D /* ScreenState.swift */; };
 		2EC166322AF005F200B12C8D /* KeyPad.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EC166312AF005F200B12C8D /* KeyPad.swift */; };
+		2EC166342AF02D0900B12C8D /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EC166332AF02D0900B12C8D /* SettingsView.swift */; };
+		2EC166392AF02DB000B12C8D /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EC166382AF02DB000B12C8D /* SettingsViewModel.swift */; };
+		2EC1663D2AF02E3800B12C8D /* SettingUiModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EC1663C2AF02E3800B12C8D /* SettingUiModel.swift */; };
 		7555FF83242A565900829871 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7555FF82242A565900829871 /* ContentView.swift */; };
 /* End PBXBuildFile section */
 
@@ -32,6 +35,9 @@
 		2EC1662D2AE8070100B12C8D /* Screen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Screen.swift; sourceTree = "<group>"; };
 		2EC1662F2AE8083600B12C8D /* ScreenState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenState.swift; sourceTree = "<group>"; };
 		2EC166312AF005F200B12C8D /* KeyPad.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyPad.swift; sourceTree = "<group>"; };
+		2EC166332AF02D0900B12C8D /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		2EC166382AF02DB000B12C8D /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
+		2EC1663C2AF02E3800B12C8D /* SettingUiModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingUiModel.swift; sourceTree = "<group>"; };
 		3D9CBDAF024E49AD9B4310AA /* Pods-iosApp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iosApp.debug.xcconfig"; path = "Target Support Files/Pods-iosApp/Pods-iosApp.debug.xcconfig"; sourceTree = "<group>"; };
 		7542E5E618568CB3A61BAA35 /* Pods-iosApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iosApp.release.xcconfig"; path = "Target Support Files/Pods-iosApp/Pods-iosApp.release.xcconfig"; sourceTree = "<group>"; };
 		7555FF7B242A565900829871 /* iosApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -80,6 +86,16 @@
 			path = roms;
 			sourceTree = "<group>";
 		};
+		2EC166372AF02D7B00B12C8D /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				2EC166332AF02D0900B12C8D /* SettingsView.swift */,
+				2EC166382AF02DB000B12C8D /* SettingsViewModel.swift */,
+				2EC1663C2AF02E3800B12C8D /* SettingUiModel.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
 		2FF026BFDBFB940D6E547934 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
@@ -111,6 +127,7 @@
 		7555FF7D242A565900829871 /* iosApp */ = {
 			isa = PBXGroup;
 			children = (
+				2EC166372AF02D7B00B12C8D /* Settings */,
 				2EC1661E2AE7D7A300B12C8D /* MainViewModel.swift */,
 				058557BA273AAA24004C7B11 /* Assets.xcassets */,
 				7555FF82242A565900829871 /* ContentView.swift */,
@@ -266,12 +283,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2EC166342AF02D0900B12C8D /* SettingsView.swift in Sources */,
 				2EC166302AE8083600B12C8D /* ScreenState.swift in Sources */,
 				2EC166322AF005F200B12C8D /* KeyPad.swift in Sources */,
 				2152FB042600AC8F00CF470E /* iOSApp.swift in Sources */,
 				7555FF83242A565900829871 /* ContentView.swift in Sources */,
+				2EC1663D2AF02E3800B12C8D /* SettingUiModel.swift in Sources */,
 				2EC1661F2AE7D7A300B12C8D /* MainViewModel.swift in Sources */,
 				2EC1662E2AE8070100B12C8D /* Screen.swift in Sources */,
+				2EC166392AF02DB000B12C8D /* SettingsViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
