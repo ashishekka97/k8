@@ -23,6 +23,12 @@
 		2EC166342AF02D0900B12C8D /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EC166332AF02D0900B12C8D /* SettingsView.swift */; };
 		2EC166392AF02DB000B12C8D /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EC166382AF02DB000B12C8D /* SettingsViewModel.swift */; };
 		2EC1663D2AF02E3800B12C8D /* SettingUiModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EC1663C2AF02E3800B12C8D /* SettingUiModel.swift */; };
+		2EC1664D2AF26AF600B12C8D /* AsyncCombineLatest4Sequence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EC1664C2AF26AF600B12C8D /* AsyncCombineLatest4Sequence.swift */; };
+		2EC1664F2AF26D1100B12C8D /* CombineLatestStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EC1664E2AF26D1100B12C8D /* CombineLatestStorage.swift */; };
+		2EC166512AF26D9C00B12C8D /* CombineLatestStateMachine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EC166502AF26D9C00B12C8D /* CombineLatestStateMachine.swift */; };
+		2EC166532AF27C9E00B12C8D /* Locking.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EC166522AF27C9E00B12C8D /* Locking.swift */; };
+		2EC166552AF27E1C00B12C8D /* Rethrow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EC166542AF27E1C00B12C8D /* Rethrow.swift */; };
+		2EC166582AF288AC00B12C8D /* DequeModule in Frameworks */ = {isa = PBXBuildFile; productRef = 2EC166572AF288AC00B12C8D /* DequeModule */; };
 		7555FF83242A565900829871 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7555FF82242A565900829871 /* ContentView.swift */; };
 /* End PBXBuildFile section */
 
@@ -38,6 +44,11 @@
 		2EC166332AF02D0900B12C8D /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		2EC166382AF02DB000B12C8D /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
 		2EC1663C2AF02E3800B12C8D /* SettingUiModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingUiModel.swift; sourceTree = "<group>"; };
+		2EC1664C2AF26AF600B12C8D /* AsyncCombineLatest4Sequence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncCombineLatest4Sequence.swift; sourceTree = "<group>"; };
+		2EC1664E2AF26D1100B12C8D /* CombineLatestStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CombineLatestStorage.swift; sourceTree = "<group>"; };
+		2EC166502AF26D9C00B12C8D /* CombineLatestStateMachine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CombineLatestStateMachine.swift; sourceTree = "<group>"; };
+		2EC166522AF27C9E00B12C8D /* Locking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Locking.swift; sourceTree = "<group>"; };
+		2EC166542AF27E1C00B12C8D /* Rethrow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Rethrow.swift; sourceTree = "<group>"; };
 		3D9CBDAF024E49AD9B4310AA /* Pods-iosApp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iosApp.debug.xcconfig"; path = "Target Support Files/Pods-iosApp/Pods-iosApp.debug.xcconfig"; sourceTree = "<group>"; };
 		7542E5E618568CB3A61BAA35 /* Pods-iosApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iosApp.release.xcconfig"; path = "Target Support Files/Pods-iosApp/Pods-iosApp.release.xcconfig"; sourceTree = "<group>"; };
 		7555FF7B242A565900829871 /* iosApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -56,6 +67,7 @@
 				2EC166282AE7D80400B12C8D /* KMPNativeCoroutinesRxSwift in Frameworks */,
 				2EC166262AE7D80400B12C8D /* KMPNativeCoroutinesCore in Frameworks */,
 				22B11931CB5C99438FBDEEE1 /* Pods_iosApp.framework in Frameworks */,
+				2EC166582AF288AC00B12C8D /* DequeModule in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -89,11 +101,24 @@
 		2EC166372AF02D7B00B12C8D /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				2EC1664B2AF26AD200B12C8D /* Util */,
 				2EC166332AF02D0900B12C8D /* SettingsView.swift */,
 				2EC166382AF02DB000B12C8D /* SettingsViewModel.swift */,
 				2EC1663C2AF02E3800B12C8D /* SettingUiModel.swift */,
 			);
 			path = Settings;
+			sourceTree = "<group>";
+		};
+		2EC1664B2AF26AD200B12C8D /* Util */ = {
+			isa = PBXGroup;
+			children = (
+				2EC1664C2AF26AF600B12C8D /* AsyncCombineLatest4Sequence.swift */,
+				2EC1664E2AF26D1100B12C8D /* CombineLatestStorage.swift */,
+				2EC166502AF26D9C00B12C8D /* CombineLatestStateMachine.swift */,
+				2EC166522AF27C9E00B12C8D /* Locking.swift */,
+				2EC166542AF27E1C00B12C8D /* Rethrow.swift */,
+			);
+			path = Util;
 			sourceTree = "<group>";
 		};
 		2FF026BFDBFB940D6E547934 /* Pods */ = {
@@ -165,6 +190,7 @@
 				2EC166232AE7D80400B12C8D /* KMPNativeCoroutinesCombine */,
 				2EC166252AE7D80400B12C8D /* KMPNativeCoroutinesCore */,
 				2EC166272AE7D80400B12C8D /* KMPNativeCoroutinesRxSwift */,
+				2EC166572AF288AC00B12C8D /* DequeModule */,
 			);
 			productName = iosApp;
 			productReference = 7555FF7B242A565900829871 /* iosApp.app */;
@@ -196,6 +222,7 @@
 			mainGroup = 7555FF72242A565900829871;
 			packageReferences = (
 				2EC166202AE7D80400B12C8D /* XCRemoteSwiftPackageReference "KMP-NativeCoroutines" */,
+				2EC166562AF288AC00B12C8D /* XCRemoteSwiftPackageReference "swift-collections" */,
 			);
 			productRefGroup = 7555FF7C242A565900829871 /* Products */;
 			projectDirPath = "";
@@ -284,14 +311,19 @@
 			buildActionMask = 2147483647;
 			files = (
 				2EC166342AF02D0900B12C8D /* SettingsView.swift in Sources */,
+				2EC166552AF27E1C00B12C8D /* Rethrow.swift in Sources */,
 				2EC166302AE8083600B12C8D /* ScreenState.swift in Sources */,
+				2EC166512AF26D9C00B12C8D /* CombineLatestStateMachine.swift in Sources */,
 				2EC166322AF005F200B12C8D /* KeyPad.swift in Sources */,
 				2152FB042600AC8F00CF470E /* iOSApp.swift in Sources */,
 				7555FF83242A565900829871 /* ContentView.swift in Sources */,
+				2EC1664D2AF26AF600B12C8D /* AsyncCombineLatest4Sequence.swift in Sources */,
 				2EC1663D2AF02E3800B12C8D /* SettingUiModel.swift in Sources */,
 				2EC1661F2AE7D7A300B12C8D /* MainViewModel.swift in Sources */,
+				2EC166532AF27C9E00B12C8D /* Locking.swift in Sources */,
 				2EC1662E2AE8070100B12C8D /* Screen.swift in Sources */,
 				2EC166392AF02DB000B12C8D /* SettingsViewModel.swift in Sources */,
+				2EC1664F2AF26D1100B12C8D /* CombineLatestStorage.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -488,6 +520,14 @@
 				kind = branch;
 			};
 		};
+		2EC166562AF288AC00B12C8D /* XCRemoteSwiftPackageReference "swift-collections" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-collections.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.5;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -510,6 +550,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 2EC166202AE7D80400B12C8D /* XCRemoteSwiftPackageReference "KMP-NativeCoroutines" */;
 			productName = KMPNativeCoroutinesRxSwift;
+		};
+		2EC166572AF288AC00B12C8D /* DequeModule */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2EC166562AF288AC00B12C8D /* XCRemoteSwiftPackageReference "swift-collections" */;
+			productName = DequeModule;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

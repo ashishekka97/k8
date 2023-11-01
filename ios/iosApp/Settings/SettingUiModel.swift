@@ -15,12 +15,25 @@ struct SettingUiModel: Identifiable {
     var boolVal: Bool = false
     var stringVal: String = ""
     var options: [Option] = []
+    var optionVal: Option? = nil
 }
 
 struct Option: Identifiable {
     let id = UUID()
     var name: String
     var isSelected: Bool = false
+}
+
+extension Option : Hashable {
+    static func == (lhs: Option, rhs: Option) -> Bool {
+        return lhs.id == rhs.id && lhs.name == rhs.name && lhs.isSelected == rhs.isSelected
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(name)
+        hasher.combine(isSelected)
+    }
 }
 
 extension SettingUiModel {
@@ -36,8 +49,8 @@ extension SettingUiModel {
 extension SettingUiModel {
     enum Kind {
         case text(config: TextConfig)
-        case toggle(config: ToggleConfig)
-        case picker(config: PickerConfig)
+        case toggle(config: ToggleConfig, onToggled: (Key, Bool) -> Void)
+        case picker(config: PickerConfig, onSelected: (Key, Option) -> Void)
     }
 }
 

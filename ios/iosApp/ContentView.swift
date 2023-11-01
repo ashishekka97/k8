@@ -47,7 +47,6 @@ struct ContentView: View {
             .sheet(isPresented: $showSettings) {
                 SettingsView { data in
                     showSettings = false
-                    dump(data)
                 }
             }
         }
