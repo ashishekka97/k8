@@ -2,7 +2,11 @@ import SwiftUI
 import common
 
 struct ContentView: View {
+    
     @StateObject var viewModel = MainViewModel(chip8: Chip8Impl())
+    
+    @State private var showSettings = false
+    
 	var body: some View {
         NavigationView {
             VStack(alignment: .leading) {
@@ -34,12 +38,21 @@ struct ContentView: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
-                        print("Settings")
+                        showSettings = true
                     } label: {
                         Image(systemName: "gearshape")
                     }
                 }
             }
+            .sheet(isPresented: $showSettings) {
+                SettingsView { data in
+                    showSettings = false
+                }
+            }
         }
 	}
+}
+
+#Preview {
+    ContentView(viewModel: MainViewModel(chip8: Chip8Impl()))
 }

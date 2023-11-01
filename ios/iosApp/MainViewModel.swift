@@ -25,7 +25,6 @@ class MainViewModel : ObservableObject {
             let stream = asyncSequence(for: Chip8NativeKt.getVideoMemoryFlow(chip8))
             for try await data in stream {
                 self.vRam = mapToBool(vRam: data)
-                print(self.vRam)
             }
         } catch {
             print("failed with error")
