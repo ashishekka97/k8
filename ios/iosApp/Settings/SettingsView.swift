@@ -7,12 +7,13 @@
 //
 
 import SwiftUI
+import common
 
 struct SettingsView: View {
     
-    @StateObject var viewModel = SettingsViewModel()
+    @StateObject var viewModel: SettingsViewModel
     
-    let successFullyChanged: (_ data: [SettingUiModel]) -> Void
+    let successFullyChanged: () -> Void
     
     var body: some View {
         NavigationView {
@@ -43,16 +44,14 @@ struct SettingsView: View {
                         }
                     }
                 }
-            }.onAppear(perform: {
-                Task {
-                    await viewModel.observeSettings()
-                }
+            }.onDisappear(perform: {
+                self.successFullyChanged()
             })
             .navigationTitle("Settings")
             .toolbar(content: {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button {
-                        successFullyChanged(viewModel.settings)
+                        successFullyChanged()
                     } label: {
                         Image(systemName: "arrow.uturn.backward")
                     }
@@ -63,5 +62,5 @@ struct SettingsView: View {
 }
 
 #Preview {
-    SettingsView { _ in }
+    SettingsView(viewModel: SettingsViewModel(settings: K8Settings()), successFullyChanged: { } )
 }

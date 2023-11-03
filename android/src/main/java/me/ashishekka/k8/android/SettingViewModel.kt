@@ -8,8 +8,8 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import me.ashishekka.k8.configs.ColorScheme
 import me.ashishekka.k8.configs.EmulatorSpeed
+import me.ashishekka.k8.configs.ThemeColor
 import me.ashishekka.k8.storage.K8Settings
 import me.ashishekka.k8.storage.KEY_HAPTICS
 import me.ashishekka.k8.storage.KEY_SOUND
@@ -51,7 +51,7 @@ class SettingViewModel : ViewModel() {
                         key = KEY_THEME,
                         title = "Theme",
                         description = "Change the color scheme of the app and chip8 screen",
-                        options = ColorScheme.getAllThemes(),
+                        options = ThemeColor.getAllThemes(),
                         optionSelected = theme
                     ),
 

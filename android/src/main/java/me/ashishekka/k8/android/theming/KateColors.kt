@@ -6,13 +6,13 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import me.ashishekka.k8.configs.ColorScheme
+import me.ashishekka.k8.configs.ThemeColor
 
-fun getThemeColors(scheme: ColorScheme = ColorScheme.GAMEBOY): Colors {
+fun getThemeColors(scheme: ThemeColor = ThemeColor.GAMEBOY): Colors {
     return scheme.mapToColors()
 }
 
-private fun ColorScheme.mapToColors() = Colors(
+private fun ThemeColor.mapToColors() = Colors(
     primary = Color(foreground),
     primaryVariant = Color(foreground),
     secondary = Color(foreground),

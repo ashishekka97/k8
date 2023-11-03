@@ -7,8 +7,8 @@ import kotlinx.browser.window
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import me.ashishekka.k8.configs.ColorScheme
 import me.ashishekka.k8.configs.EmulatorSpeed
+import me.ashishekka.k8.configs.ThemeColor
 import me.ashishekka.k8.core.Chip8
 import me.ashishekka.k8.core.Chip8Impl
 import me.ashishekka.k8.core.KeyEventType.DOWN
@@ -89,7 +89,7 @@ fun main() {
 
         var sound by remember { mutableStateOf(storedSound) }
         var theme by remember {
-            mutableStateOf(ColorScheme.getThemeFromIndex(storedTheme))
+            mutableStateOf(ThemeColor.getThemeFromIndex(storedTheme))
         }
         var speed by remember {
             mutableStateOf(EmulatorSpeed.getSpeedFromIndex(storedSpeed))
@@ -201,7 +201,7 @@ fun main() {
                         Select({
                             onChange {
                                 it.value?.let {
-                                    val selectedTheme = ColorScheme.getThemeFromKey(it)
+                                    val selectedTheme = ThemeColor.getThemeFromKey(it)
                                     scope.launch {
                                         settings.setIntSetting(
                                             KEY_THEME,
@@ -212,7 +212,7 @@ fun main() {
                                 }
                             }
                         }, multiple = false) {
-                            ColorScheme.values().mapIndexed { index, colorScheme ->
+                            ThemeColor.values().mapIndexed { index, colorScheme ->
                                 Option(colorScheme.schemeName, {
                                     if (index == theme.ordinal) selected()
                                 }) {

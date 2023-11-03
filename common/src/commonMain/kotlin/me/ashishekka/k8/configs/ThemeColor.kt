@@ -1,6 +1,6 @@
 package me.ashishekka.k8.configs
 
-enum class ColorScheme(
+enum class ThemeColor(
     val schemeName: String,
     val background: Long,
     val foreground: Long
