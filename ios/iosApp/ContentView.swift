@@ -6,6 +6,7 @@ struct ContentView: View {
     @StateObject var mainViewModel: MainViewModel
     @StateObject var settingsViewModel: SettingsViewModel
     @State private var showSettings = false
+    @State private var showFilePicker = false
     var k8Settings: K8Settings
     var chip8: Chip8
     
@@ -28,6 +29,15 @@ struct ContentView: View {
                 } onKeyUp: { key in
                     mainViewModel.onKeyUp(key: key)
                 }
+                .task {
+                    let selectedSpeedKey = settingsViewModel.settings.first(where: { $0.key == .speed })?.optionVal?.name ?? "1.0"
+                    let speed = EmulatorSpeed.companion.getSpeedFromKey(key: Float(selectedSpeedKey) ?? 1.0)
+                    mainViewModel.changeEmualatorSpeed(speed: speed)
+                    let sound = settingsViewModel.settings.first(where: { $0.key == .sound })?.boolVal ?? false
+                    mainViewModel.toggleSound(isEnabled: sound)
+                    mainViewModel.loadAndStart()
+                    await settingsViewModel.observeSettings()
+                }
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -35,14 +45,14 @@ struct ContentView: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
-                        print("Load")
+                        showFilePicker = true
                     } label: {
                         Image(systemName: "filemenu.and.selection")
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
-                        print("Reset")
+                        mainViewModel.loadAndStart()
                     } label: {
                         Image(systemName: "arrow.circlepath")
                     }
@@ -55,17 +65,24 @@ struct ContentView: View {
                     }
                 }
             }
+            .fileImporter(isPresented: $showFilePicker, allowedContentTypes: [.data]) { result in
+                do {
+                    let url = try result.get()
+                    mainViewModel.loadAndStart(url: url)
+                } catch {
+                    print("Error in opening file")
+                }
+            }
             .sheet(isPresented: $showSettings) {
                 SettingsView(viewModel: self.settingsViewModel, successFullyChanged: {
                     let selectedSpeedKey = settingsViewModel.settings.first(where: { $0.key == .speed })?.optionVal?.name ?? "1.0"
                     let speed = EmulatorSpeed.companion.getSpeedFromKey(key: Float(selectedSpeedKey) ?? 1.0)
                     mainViewModel.changeEmualatorSpeed(speed: speed)
+                    
+                    let sound = settingsViewModel.settings.first(where: { $0.key == .sound })?.boolVal ?? false
+                    mainViewModel.toggleSound(isEnabled: sound)
                     showSettings = false
                 })
-            }.task {
-                mainViewModel.loadAndStart()
-                await settingsViewModel.observeSettings()
-                await mainViewModel.startObservation()
             }
         }
     }
