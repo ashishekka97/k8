@@ -14,13 +14,27 @@ import SwiftUI
 @MainActor
 class MainViewModel : ObservableObject {
     @Published var vRam = [[Bool]](repeating: [Bool](repeating: Bool.random(), count: 64), count: 32)
+    @Published var sound = false
+    @Published var speed = EmulatorSpeed.full
+    @Published var theme = ThemeColor.default_
     
     let chip8: Chip8
-    init(chip8: Chip8) {
-        self.chip8 = Chip8Impl()
+    let k8Settings: K8Settings
+    init(chip8: Chip8, settings: K8Settings) {
+        self.chip8 = chip8
+        self.k8Settings = settings
     }
     
-    func startObservingVRam() async {
+    func startObservation() {
+        _ = Task {
+            await withTaskGroup(of: Void.self) { taskGroup in
+                taskGroup.addTask { await self.startObservingSpeed() }
+                taskGroup.addTask { await self.startObservingVRam() }
+            }
+        }
+    }
+    
+    private func startObservingVRam() async {
         do {
             let stream = asyncSequence(for: Chip8NativeKt.getVideoMemoryFlow(chip8))
             for try await data in stream {
@@ -28,6 +42,44 @@ class MainViewModel : ObservableObject {
             }
         } catch {
             print("failed with error")
+        }
+    }
+    
+    private func startObservingSound() async {
+        do {
+            let soundSequence = asyncSequence(for: k8Settings.getBooleanFlowSetting(key: SettingUiModel.Key.sound.rawValue))
+            for try await sound in soundSequence {
+                print(sound)
+                self.sound = sound.boolValue
+            }
+        } catch {
+            print("Error in observing sound")
+        }
+    }
+    
+    private func startObservingTheme() async {
+        print("start observing speed")
+        do {
+            let themeSequence = asyncSequence(for: k8Settings.getIntFlowSetting(key: SettingUiModel.Key.theme.rawValue))
+            for try await theme in themeSequence {
+                print(theme)
+                self.theme = ThemeColor.companion.getThemeFromIndex(index: theme.int32Value)
+            }
+        } catch {
+            print("Error in observing theme")
+        }
+    }
+    
+    private func startObservingSpeed() async {
+        print("start observing speed")
+        do {
+            let speedSequence = asyncSequence(for: k8Settings.getIntFlowSetting(key: SettingUiModel.Key.speed.rawValue))
+            for try await speed in speedSequence {
+                print(speed)
+                self.speed = EmulatorSpeed.companion.getSpeedFromIndex(index: speed.int32Value)
+            }
+        } catch {
+            print("Error in observing speed")
         }
     }
     
@@ -79,6 +131,14 @@ class MainViewModel : ObservableObject {
             // Couldn't read the file.
             return nil
         }
+    }
+    
+    func onKeyDown(key: Int) {
+        chip8.onKey(key: Int32(key), type: KeyEventType.down)
+    }
+    
+    func onKeyUp(key: Int) {
+        chip8.onKey(key: Int32(key), type: KeyEventType.up)
     }
 
 }

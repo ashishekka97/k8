@@ -15,8 +15,8 @@ class SettingsViewModel : ObservableObject {
     @Published var settings: [SettingUiModel]
     private var k8Settings: K8Settings
     
-    init() {
-        k8Settings = K8Settings()
+    init(settings: K8Settings) {
+        k8Settings = settings
         self.settings = []
     }
     
@@ -45,7 +45,7 @@ class SettingsViewModel : ObservableObject {
             do {
                 switch (key) {
                 case .theme: do {
-                    let themeIndex = Int32(ColorScheme.companion.getThemeFromKey(key: selection.name).ordinal)
+                    let themeIndex = Int32(ThemeColor.companion.getThemeFromKey(key: selection.name).ordinal)
                     _ = try await asyncFunction(for: k8Settings.setIntSetting(key: key.rawValue, value: themeIndex))
                 }
             
@@ -65,7 +65,7 @@ class SettingsViewModel : ObservableObject {
     }
     
     func observeSettings() async {
-        let themeOptions = ColorScheme.companion.getAllThemes().map { scheme in Option(name: scheme)}
+        let themeOptions = ThemeColor.companion.getAllThemes().map { scheme in Option(name: scheme)}
         let speedOptions = EmulatorSpeed.entries.map { speed in Option(name: "\(speed.speedFactor)")}
         let settingMap: KeyValuePairs<SettingUiModel.Key, SettingUiModel> = [
             .sound : SettingUiModel(key: .sound, kind: .toggle(config: .init(title: "Sound", description: "Enables sound emulation"), onToggled: onToggleChange(key:isEnabled:)), boolVal: false),

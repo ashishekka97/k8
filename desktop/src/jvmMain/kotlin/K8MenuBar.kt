@@ -6,14 +6,14 @@ import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.MenuBar
 import java.awt.FileDialog
 import java.awt.Frame
-import me.ashishekka.k8.configs.ColorScheme
 import me.ashishekka.k8.configs.EmulatorSpeed
+import me.ashishekka.k8.configs.ThemeColor
 
 @Composable
 fun FrameWindowScope.K8MenuBar(
     isFileChooserOpen: Boolean,
     soundEnabled: Boolean,
-    currentTheme: ColorScheme,
+    currentTheme: ThemeColor,
     currentSpeed: EmulatorSpeed,
     onFileOpenClick: () -> Unit,
     onResetClick: () -> Unit,
@@ -49,7 +49,7 @@ fun FrameWindowScope.K8MenuBar(
                 onCheckedChange = { onSoundToggled(!soundEnabled) }
             )
             Menu("Theme") {
-                ColorScheme.values().forEachIndexed { index, colorScheme ->
+                ThemeColor.values().forEachIndexed { index, colorScheme ->
                     RadioButtonItem(
                         text = colorScheme.schemeName.capitalize(),
                         selected = currentTheme.ordinal == index,

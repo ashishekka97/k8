@@ -39,7 +39,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import me.ashishekka.k8.android.theming.fullScaffoldBackground
 import me.ashishekka.k8.android.theming.getThemeColors
-import me.ashishekka.k8.configs.ColorScheme
+import me.ashishekka.k8.configs.ThemeColor
 import me.ashishekka.k8.storage.K8Settings
 import me.ashishekka.k8.storage.KEY_THEME
 
@@ -55,7 +55,7 @@ class RomPickerActivity : AppCompatActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             val themeState = setting.getIntFlowSetting(KEY_THEME).collectAsState(0)
-            val theme = ColorScheme.getThemeFromIndex(themeState.value)
+            val theme = ThemeColor.getThemeFromIndex(themeState.value)
             RomPickerScreen(getThemeColors(theme), romFileList.value, ::onRomFileClicked) {
                 onBackPressedDispatcher.onBackPressed()
             }

@@ -19,10 +19,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import me.ashishekka.k8.configs.ColorScheme
-import me.ashishekka.k8.configs.ColorScheme.DEFAULT
 import me.ashishekka.k8.configs.EmulatorSpeed
 import me.ashishekka.k8.configs.EmulatorSpeed.FULL
+import me.ashishekka.k8.configs.ThemeColor
+import me.ashishekka.k8.configs.ThemeColor.DEFAULT
 import me.ashishekka.k8.core.Chip8
 import me.ashishekka.k8.core.Chip8Impl
 import me.ashishekka.k8.core.KeyEventType
@@ -49,7 +49,7 @@ fun main() = application {
         val speedState = settings.getIntFlowSetting(KEY_SPEED).collectAsState(FULL.ordinal)
         val soundState = settings.getBooleanFlowSetting(KEY_SOUND).collectAsState(false)
 
-        val theme = ColorScheme.getThemeFromIndex(themeState.value)
+        val theme = ThemeColor.getThemeFromIndex(themeState.value)
         val speed = EmulatorSpeed.getSpeedFromIndex(speedState.value)
         chip8.emulationSpeedFactor(speed.speedFactor)
 

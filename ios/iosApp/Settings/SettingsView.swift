@@ -7,12 +7,18 @@
 //
 
 import SwiftUI
+import common
 
 struct SettingsView: View {
     
-    @StateObject var viewModel = SettingsViewModel()
+    @StateObject var viewModel: SettingsViewModel
     
     let successFullyChanged: (_ data: [SettingUiModel]) -> Void
+    
+    init(k8Settings: K8Settings, successFullyChanged: @escaping (_: [SettingUiModel]) -> Void) {
+        self._viewModel = StateObject(wrappedValue: SettingsViewModel(settings: k8Settings))
+        self.successFullyChanged = successFullyChanged
+    }
     
     var body: some View {
         NavigationView {
@@ -47,6 +53,8 @@ struct SettingsView: View {
                 Task {
                     await viewModel.observeSettings()
                 }
+            }).onDisappear(perform: {
+                self.successFullyChanged(viewModel.settings)
             })
             .navigationTitle("Settings")
             .toolbar(content: {
@@ -63,5 +71,5 @@ struct SettingsView: View {
 }
 
 #Preview {
-    SettingsView { _ in }
+    SettingsView(k8Settings: K8Settings(), successFullyChanged: { _ in })
 }

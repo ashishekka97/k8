@@ -10,27 +10,40 @@ import SwiftUI
 
 struct KeyPad: View {
     
-    private var keys = ["1", "2", "3", "C",
-                        "4", "5", "6", "D",
-                        "7", "8", "9", "E",
-                        "A", "0", "B", "F"
+    var keys = ["1", "2", "3", "C",
+                "4", "5", "6", "D",
+                "7", "8", "9", "E",
+                "A", "0", "B", "F"
     ]
     
-    private var gridItemLayout = [GridItem(.flexible(), spacing: 0), GridItem(.flexible(), spacing: 0), GridItem(.flexible(), spacing: 0), GridItem(.flexible(), spacing: 0)]
+    var gridItemLayout = [GridItem(.flexible(), spacing: 0), GridItem(.flexible(), spacing: 0), GridItem(.flexible(), spacing: 0), GridItem(.flexible(), spacing: 0)]
+    
+    let onKeyDown: (Int) -> Void
+    let onKeyUp: (Int) -> Void
     
     var body: some View {
         LazyVGrid(columns: gridItemLayout, spacing: 20) {
             ForEach(keys, id: \.self) { key in
                 Button {
-                    print("Clicked \(key)")
+                    onKeyUp(Int(key) ?? 16)
                 } label: {
                     Text(key).font(.system(size: 24)).padding(16)
-                }.buttonStyle(BorderedButtonStyle())
+                }
+                .buttonStyle(BorderedButtonStyle())
+                .onLongPressGesture(minimumDuration: 0, perform: {}) { pressed in
+                    if (pressed) {
+                        onKeyDown(Int(key) ?? 16)
+                    }
+                }
             }
         }
     }
 }
 
 #Preview {
-    KeyPad()
+    KeyPad {_ in
+        
+    } onKeyUp: {_ in
+        
+    }
 }

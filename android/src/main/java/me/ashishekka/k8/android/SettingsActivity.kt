@@ -45,7 +45,7 @@ import androidx.core.view.WindowCompat
 import me.ashishekka.k8.android.theming.fullScaffoldBackground
 import me.ashishekka.k8.android.theming.getThemeColors
 import me.ashishekka.k8.android.util.capitalize
-import me.ashishekka.k8.configs.ColorScheme
+import me.ashishekka.k8.configs.ThemeColor
 import me.ashishekka.k8.storage.K8Settings
 import me.ashishekka.k8.storage.KEY_THEME
 
@@ -58,7 +58,7 @@ class SettingsActivity : AppCompatActivity() {
         setContent {
             val uiState = viewModel.uiState
             val themeState = settings.getIntFlowSetting(KEY_THEME).collectAsState(0)
-            val theme = ColorScheme.getThemeFromIndex(themeState.value)
+            val theme = ThemeColor.getThemeFromIndex(themeState.value)
             SettingScreen(
                 getThemeColors(theme),
                 uiState.value,

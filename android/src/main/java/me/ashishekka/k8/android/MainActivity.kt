@@ -60,7 +60,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import me.ashishekka.k8.android.theming.fullScaffoldBackground
 import me.ashishekka.k8.android.theming.getThemeColors
-import me.ashishekka.k8.configs.ColorScheme
+import me.ashishekka.k8.configs.ThemeColor
 import me.ashishekka.k8.core.VideoMemory
 import me.ashishekka.k8.storage.KEY_HAPTICS
 import me.ashishekka.k8.storage.KEY_THEME
@@ -98,7 +98,7 @@ class MainActivity : AppCompatActivity() {
             val themeState = viewModel.settings.getIntFlowSetting(KEY_THEME).collectAsState(
                 initial = 0
             )
-            val theme = ColorScheme.getThemeFromIndex(themeState.value)
+            val theme = ThemeColor.getThemeFromIndex(themeState.value)
             val hapticState = viewModel.settings.getBooleanFlowSetting(KEY_HAPTICS).collectAsState(
                 initial = false
             )
