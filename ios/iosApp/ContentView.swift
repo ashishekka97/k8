@@ -2,16 +2,18 @@ import SwiftUI
 import common
 
 struct ContentView: View {
-    @StateObject var viewModel: MainViewModel
+    
+    @StateObject var mainViewModel: MainViewModel
+    @StateObject var settingsViewModel: SettingsViewModel
     @State private var showSettings = false
-    @State private var theme = ThemeColor.default_
     var k8Settings: K8Settings
     var chip8: Chip8
     
     init(k8Settings: K8Settings, chip8: Chip8) {
         self.k8Settings = k8Settings
         self.chip8 = chip8
-        self._viewModel = StateObject(wrappedValue: MainViewModel(chip8: chip8, settings: k8Settings))
+        self._mainViewModel = StateObject(wrappedValue: MainViewModel(chip8: chip8))
+        self._settingsViewModel = StateObject(wrappedValue: SettingsViewModel(settings: k8Settings))
         self.showSettings = false
     }
     
@@ -19,16 +21,12 @@ struct ContentView: View {
     var body: some View {
         NavigationView {
             VStack(alignment: .leading) {
-                Screen(viewModel: viewModel, theme: self.$theme)
-                    .task {
-                        viewModel.loadAndStart()
-                        viewModel.startObservation()
-                    }
+                Screen(viewModel: mainViewModel, settingsViewModel: settingsViewModel)
                 Spacer()
                 KeyPad { key in
-                    viewModel.onKeyDown(key: key)
+                    mainViewModel.onKeyDown(key: key)
                 } onKeyUp: { key in
-                    viewModel.onKeyUp(key: key)
+                    mainViewModel.onKeyUp(key: key)
                 }
             }
             .toolbar {
@@ -58,17 +56,16 @@ struct ContentView: View {
                 }
             }
             .sheet(isPresented: $showSettings) {
-                SettingsView(k8Settings: K8Settings(), successFullyChanged: { data in
-                    let speed = Float((data.first(where: { $0.key == .speed })?.optionVal?.name ?? "1.0")) ?? 1.0
-                    print(speed)
-                    chip8.emulationSpeedFactor(factor: speed)
-                    
-                    let theme = ThemeColor.companion.getThemeFromKey(key: data.first(where: { $0.key == .theme })?.optionVal?.name ?? "default")
-                    print(Color(hex: theme.background))
-                    self.theme = theme
-                    
+                SettingsView(viewModel: self.settingsViewModel, successFullyChanged: {
+                    let selectedSpeedKey = settingsViewModel.settings.first(where: { $0.key == .speed })?.optionVal?.name ?? "1.0"
+                    let speed = EmulatorSpeed.companion.getSpeedFromKey(key: Float(selectedSpeedKey) ?? 1.0)
+                    mainViewModel.changeEmualatorSpeed(speed: speed)
                     showSettings = false
                 })
+            }.task {
+                mainViewModel.loadAndStart()
+                await settingsViewModel.observeSettings()
+                await mainViewModel.startObservation()
             }
         }
     }

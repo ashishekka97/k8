@@ -13,12 +13,7 @@ struct SettingsView: View {
     
     @StateObject var viewModel: SettingsViewModel
     
-    let successFullyChanged: (_ data: [SettingUiModel]) -> Void
-    
-    init(k8Settings: K8Settings, successFullyChanged: @escaping (_: [SettingUiModel]) -> Void) {
-        self._viewModel = StateObject(wrappedValue: SettingsViewModel(settings: k8Settings))
-        self.successFullyChanged = successFullyChanged
-    }
+    let successFullyChanged: () -> Void
     
     var body: some View {
         NavigationView {
@@ -49,18 +44,14 @@ struct SettingsView: View {
                         }
                     }
                 }
-            }.onAppear(perform: {
-                Task {
-                    await viewModel.observeSettings()
-                }
-            }).onDisappear(perform: {
-                self.successFullyChanged(viewModel.settings)
+            }.onDisappear(perform: {
+                self.successFullyChanged()
             })
             .navigationTitle("Settings")
             .toolbar(content: {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button {
-                        successFullyChanged(viewModel.settings)
+                        successFullyChanged()
                     } label: {
                         Image(systemName: "arrow.uturn.backward")
                     }
@@ -71,5 +62,5 @@ struct SettingsView: View {
 }
 
 #Preview {
-    SettingsView(k8Settings: K8Settings(), successFullyChanged: { _ in })
+    SettingsView(viewModel: SettingsViewModel(settings: K8Settings()), successFullyChanged: { } )
 }

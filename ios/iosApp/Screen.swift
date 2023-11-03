@@ -11,14 +11,16 @@ import common
 
 struct Screen: View {
     @StateObject var viewModel: MainViewModel
-    @Binding var theme: ThemeColor
+    @StateObject var settingsViewModel: SettingsViewModel
     var body: some View {
+        let selectedThemeKey = settingsViewModel.settings.first(where: { $0.key == .theme })?.optionVal?.name ?? ThemeColor.default_.name
+        let theme = ThemeColor.companion.getThemeFromKey(key: selectedThemeKey)
+        let pixelOffColor = Color(hex: theme.background)
+        let pixelOnColor = Color(hex: theme.foreground)
+        
         Canvas(rendersAsynchronously: true) { context, size in
             let gridTileWidth: CGFloat = size.width / CGFloat(64)
             let gridTileHeight: CGFloat = size.height / CGFloat(32)
-            let pixelOffColor = Color(hex: theme.background)
-            let pixelOnColor = Color(hex: theme.foreground)
-            
             viewModel.vRam.indices.forEach { rowIndex in
                 viewModel.vRam[rowIndex].indices.forEach { colIndex in
                     let xx = CGFloat(colIndex) * gridTileWidth
@@ -49,6 +51,6 @@ struct Screen: View {
 
 struct Screen_Preview : PreviewProvider {
     static var previews: some View {
-        Screen(viewModel: MainViewModel(chip8: Chip8Impl(), settings: K8Settings()), theme: Binding<ThemeColor>.constant(ThemeColor.gameboy))
+        Screen(viewModel: MainViewModel(chip8: Chip8Impl()), settingsViewModel: SettingsViewModel(settings: K8Settings()))
     }
 }
