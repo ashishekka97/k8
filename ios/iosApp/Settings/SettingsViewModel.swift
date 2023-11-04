@@ -64,7 +64,7 @@ class SettingsViewModel : ObservableObject {
         }
     }
     
-    func observeSettings() async {
+    func observeSettings() {
         let themeOptions = ThemeColor.companion.getAllThemes().map { scheme in Option(name: scheme)}
         let speedOptions = EmulatorSpeed.entries.map { speed in Option(name: "\(speed.speedFactor)")}
         let settingMap: KeyValuePairs<SettingUiModel.Key, SettingUiModel> = [
@@ -75,44 +75,45 @@ class SettingsViewModel : ObservableObject {
             .about: SettingUiModel(key: .about, kind: .text(config: .init(title: "About", description: "1.0")))
         ]
         
-        
-        do {
-            let soundSequence = asyncSequence(for: k8Settings.getBooleanFlowSetting(key: SettingUiModel.Key.sound.rawValue))
-            let hapticsSequence = asyncSequence(for: k8Settings.getBooleanFlowSetting(key: SettingUiModel.Key.haptics.rawValue))
-            let themeSequence = asyncSequence(for: k8Settings.getIntFlowSetting(key: SettingUiModel.Key.theme.rawValue))
-            let speedSequence = asyncSequence(for: k8Settings.getIntFlowSetting(key: SettingUiModel.Key.speed.rawValue))
-            
-            for try await (sound, haptics, theme, speed) in combineLatest(soundSequence, hapticsSequence, themeSequence, speedSequence) {
-                self.settings = settingMap.compactMap { (key, value) in
-                    switch (key) {
-                    case .sound: do {
-                        var soundSetting = value
-                        soundSetting.boolVal = sound.boolValue
-                        return soundSetting
-                    }
-                    case .haptics: do {
-                        var hapticsSetting = value
-                        hapticsSetting.boolVal = haptics.boolValue
-                        return hapticsSetting
-                    }
-                    case .theme: do {
-                        var themeSetting = value
-                        themeSetting.optionVal = themeOptions[theme.intValue]
-                        return themeSetting
-                    }
-                    case .speed: do {
-                        var speedSetting = value
-                        speedSetting.optionVal = speedOptions[speed.intValue]
-                        return speedSetting
-                    }
-                    default: do {
-                        return value
-                    }
+        _ = Task {
+            do {
+                let soundSequence = asyncSequence(for: k8Settings.getBooleanFlowSetting(key: SettingUiModel.Key.sound.rawValue))
+                let hapticsSequence = asyncSequence(for: k8Settings.getBooleanFlowSetting(key: SettingUiModel.Key.haptics.rawValue))
+                let themeSequence = asyncSequence(for: k8Settings.getIntFlowSetting(key: SettingUiModel.Key.theme.rawValue))
+                let speedSequence = asyncSequence(for: k8Settings.getIntFlowSetting(key: SettingUiModel.Key.speed.rawValue))
+                
+                for try await (sound, haptics, theme, speed) in combineLatest(soundSequence, hapticsSequence, themeSequence, speedSequence) {
+                    self.settings = settingMap.compactMap { (key, value) in
+                        switch (key) {
+                        case .sound: do {
+                            var soundSetting = value
+                            soundSetting.boolVal = sound.boolValue
+                            return soundSetting
+                        }
+                        case .haptics: do {
+                            var hapticsSetting = value
+                            hapticsSetting.boolVal = haptics.boolValue
+                            return hapticsSetting
+                        }
+                        case .theme: do {
+                            var themeSetting = value
+                            themeSetting.optionVal = themeOptions[theme.intValue]
+                            return themeSetting
+                        }
+                        case .speed: do {
+                            var speedSetting = value
+                            speedSetting.optionVal = speedOptions[speed.intValue]
+                            return speedSetting
+                        }
+                        default: do {
+                            return value
+                        }
+                        }
                     }
                 }
+            } catch {
+                print("failed with error")
             }
-        } catch {
-            print("failed with error")
         }
     }
 }

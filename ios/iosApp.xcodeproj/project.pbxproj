@@ -12,6 +12,7 @@
 		2152FB042600AC8F00CF470E /* iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2152FB032600AC8F00CF470E /* iOSApp.swift */; };
 		22B11931CB5C99438FBDEEE1 /* Pods_iosApp.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F249BFD41EB39F4B0C7F148 /* Pods_iosApp.framework */; };
 		2E5588752AF527D500900F18 /* ColorUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E5588742AF527D500900F18 /* ColorUtil.swift */; };
+		2E5588772AF672B700900F18 /* SoundModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E5588762AF672B700900F18 /* SoundModel.swift */; };
 		2EC1661F2AE7D7A300B12C8D /* MainViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EC1661E2AE7D7A300B12C8D /* MainViewModel.swift */; };
 		2EC166222AE7D80400B12C8D /* KMPNativeCoroutinesAsync in Frameworks */ = {isa = PBXBuildFile; productRef = 2EC166212AE7D80400B12C8D /* KMPNativeCoroutinesAsync */; };
 		2EC166242AE7D80400B12C8D /* KMPNativeCoroutinesCombine in Frameworks */ = {isa = PBXBuildFile; productRef = 2EC166232AE7D80400B12C8D /* KMPNativeCoroutinesCombine */; };
@@ -38,6 +39,7 @@
 		058557D8273AAEEB004C7B11 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		2152FB032600AC8F00CF470E /* iOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSApp.swift; sourceTree = "<group>"; };
 		2E5588742AF527D500900F18 /* ColorUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorUtil.swift; sourceTree = "<group>"; };
+		2E5588762AF672B700900F18 /* SoundModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundModel.swift; sourceTree = "<group>"; };
 		2EC1661E2AE7D7A300B12C8D /* MainViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewModel.swift; sourceTree = "<group>"; };
 		2EC1662B2AE7F73700B12C8D /* invader.ch8 */ = {isa = PBXFileReference; lastKnownFileType = text; path = invader.ch8; sourceTree = "<group>"; };
 		2EC1662D2AE8070100B12C8D /* Screen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Screen.swift; sourceTree = "<group>"; };
@@ -115,6 +117,7 @@
 				2EC166332AF02D0900B12C8D /* SettingsView.swift */,
 				2EC166382AF02DB000B12C8D /* SettingsViewModel.swift */,
 				2EC1663C2AF02E3800B12C8D /* SettingUiModel.swift */,
+				2E5588762AF672B700900F18 /* SoundModel.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -326,6 +329,7 @@
 				2EC166302AE8083600B12C8D /* ScreenState.swift in Sources */,
 				2E5588752AF527D500900F18 /* ColorUtil.swift in Sources */,
 				2EC166512AF26D9C00B12C8D /* CombineLatestStateMachine.swift in Sources */,
+				2E5588772AF672B700900F18 /* SoundModel.swift in Sources */,
 				2EC166322AF005F200B12C8D /* KeyPad.swift in Sources */,
 				2152FB042600AC8F00CF470E /* iOSApp.swift in Sources */,
 				7555FF83242A565900829871 /* ContentView.swift in Sources */,

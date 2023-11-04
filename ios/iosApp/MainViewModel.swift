@@ -6,11 +6,9 @@
 //  Copyright © 2023 orgName. All rights reserved.
 //
 
-import Foundation
 import common
+import Foundation
 import KMPNativeCoroutinesAsync
-import SwiftUI
-import AVKit
 
 @MainActor
 class MainViewModel : ObservableObject {
@@ -26,7 +24,6 @@ class MainViewModel : ObservableObject {
     
     func startObservation() async {
         await startObservingVRam()
-        await startObservingSound()
     }
     
     private func startObservingVRam() async {
@@ -34,20 +31,6 @@ class MainViewModel : ObservableObject {
             let stream = asyncSequence(for: Chip8NativeKt.getVideoMemoryFlow(chip8))
             for try await data in stream {
                 self.vRam = mapToBool(vRam: data)
-            }
-        } catch {
-            print("failed with error")
-        }
-    }
-    
-    private func startObservingSound() async {
-        do {
-            let stream = asyncSequence(for: Chip8NativeKt.getSoundFlow(chip8))
-            for try await data in stream {
-                print(data)
-                if (data.boolValue) {
-                    AudioServicesPlaySystemSound(1026)
-                }
             }
         } catch {
             print("failed with error")
