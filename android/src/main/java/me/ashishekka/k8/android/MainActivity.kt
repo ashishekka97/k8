@@ -54,6 +54,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import java.util.Locale
 import kotlinx.coroutines.flow.collectLatest
@@ -81,8 +82,11 @@ class MainActivity : AppCompatActivity() {
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             val romPath = result.data?.getStringExtra(PICKED_ROM_PATH)
+            val customRomUri = result.data?.getStringExtra(CUSTOM_ROM_URI)?.toUri()
             if (romPath != null) {
-                viewModel.readRomFile(this, romPath)
+                viewModel.readRomFromAssets(this, romPath)
+            } else if (customRomUri != null) {
+                viewModel.readCustomRomFromUri(this, customRomUri)
             }
         }
     }
@@ -122,7 +126,7 @@ class MainActivity : AppCompatActivity() {
                 )
             }
         }
-        viewModel.readRomFile(this, "chip8-test-suite.ch8")
+        viewModel.readRomFromAssets(this, "chip8-test-suite.ch8")
     }
 
     override fun onResume() {
