@@ -149,6 +149,7 @@ class Chip8Impl(
                 } else {
                     soundState.value = false
                 }
+                atomicSoundUpdate.compareAndSet(expect = false, update = true)
             }
         }
     }
@@ -194,8 +195,8 @@ class Chip8Impl(
         return flow {
             while (true) {
                 if (atomicSoundUpdate.value) {
-                    emit(true)
-                    atomicSoundUpdate.compareAndSet(true, false)
+                    emit(value = soundState.value && soundEnabled)
+                    atomicSoundUpdate.compareAndSet(expect = true, update = false)
                 } else {
                     delay(16)
                 }

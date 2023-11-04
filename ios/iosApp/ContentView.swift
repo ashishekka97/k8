@@ -5,6 +5,8 @@ struct ContentView: View {
     
     @StateObject var mainViewModel: MainViewModel
     @StateObject var settingsViewModel: SettingsViewModel
+    @StateObject var soundModel: SoundModel
+    
     @State private var showSettings = false
     @State private var showFilePicker = false
     var k8Settings: K8Settings
@@ -15,6 +17,7 @@ struct ContentView: View {
         self.chip8 = chip8
         self._mainViewModel = StateObject(wrappedValue: MainViewModel(chip8: chip8))
         self._settingsViewModel = StateObject(wrappedValue: SettingsViewModel(settings: k8Settings))
+        self._soundModel = StateObject(wrappedValue: SoundModel(chip8: chip8))
         self.showSettings = false
     }
     
@@ -30,13 +33,15 @@ struct ContentView: View {
                     mainViewModel.onKeyUp(key: key)
                 }
                 .task {
+                    settingsViewModel.observeSettings()
+                    mainViewModel.loadAndStart()
+                }
+                .refreshable {
                     let selectedSpeedKey = settingsViewModel.settings.first(where: { $0.key == .speed })?.optionVal?.name ?? "1.0"
                     let speed = EmulatorSpeed.companion.getSpeedFromKey(key: Float(selectedSpeedKey) ?? 1.0)
                     mainViewModel.changeEmualatorSpeed(speed: speed)
                     let sound = settingsViewModel.settings.first(where: { $0.key == .sound })?.boolVal ?? false
                     mainViewModel.toggleSound(isEnabled: sound)
-                    mainViewModel.loadAndStart()
-                    await settingsViewModel.observeSettings()
                 }
             }
             .toolbar {
