@@ -230,3 +230,13 @@ class Chip8Impl(
         }
     }
 }
+
+enum class System(val quirks: Set<Quirk>) {
+    CHIP8(setOf(Quirk.VF_RESET, Quirk.MEMORY, Quirk.DISPLAY_WAIT, Quirk.CLIPPING)),
+    SUPERCHIP(setOf(Quirk.CLIPPING, Quirk.SHIFTING, Quirk.JUMPING)),
+    XOCHIP(setOf(Quirk.MEMORY));
+
+    fun has(quirk: Quirk): Boolean {
+        return quirks.contains(quirk)
+    }
+}
