@@ -9,7 +9,7 @@ class Cpu(
     private val memory: Memory = Memory(4096) { 0u },
     private val videoMemory: VideoMemory = VideoMemory(32) { BooleanArray(64) },
     private val keypad: Keypad,
-    private val inCommonMode: Boolean = true,
+    private val system: System = System.CHIP8,
     private val onDrawn: ((VideoMemory) -> Unit)? = null
 ) {
     // Program counter, starts at 0x200
@@ -62,7 +62,9 @@ class Cpu(
     }
 
     private fun Operation.execute(firstByte: ByteStore, secondByte: ByteStore) {
-        invoke(Operands(firstByte.lowerNibble(), secondByte.upperNibble(), secondByte.lowerNibble()))
+        invoke(
+            Operands(firstByte.lowerNibble(), secondByte.upperNibble(), secondByte.lowerNibble())
+        )
     }
 
     private fun zero(operands: Operands) {
@@ -124,16 +126,30 @@ class Cpu(
     private fun addVx(operands: Operands) {
         val registerIndex = operands.x().toInt()
         V[registerIndex] = (V[registerIndex] + operands.toByteStore()).toByteStore()
-
     }
 
     private fun arithmetics(operands: Operands) {
         val (x, y, n) = Triple(operands.x().toInt(), operands.y().toInt(), operands.n().toInt())
         when (n) {
             0x0 -> V[x] = V[y]
-            0x1 -> V[x] = V[x] or V[y]
-            0x2 -> V[x] = V[x] and V[y]
-            0x3 -> V[x] = V[x] xor V[y]
+            0x1 -> {
+                V[x] = V[x] or V[y]
+                if (system.has(Quirk.VF_RESET)) {
+                    V[0xF] = 0u
+                }
+            }
+            0x2 -> {
+                V[x] = V[x] and V[y]
+                if (system.has(Quirk.VF_RESET)) {
+                    V[0xF] = 0u
+                }
+            }
+            0x3 -> {
+                V[x] = V[x] xor V[y]
+                if (system.has(Quirk.VF_RESET)) {
+                    V[0xF] = 0u
+                }
+            }
             0x4 -> {
                 val result = V[x].toInt() + V[y].toInt()
                 V[0xF] = if (result > 0xFF) 1u else 0u
@@ -145,7 +161,7 @@ class Cpu(
                 V[x] = result.toUByte()
             }
             0x6 -> {
-                if (!inCommonMode) {
+                if (!system.has(Quirk.SHIFTING)) {
                     V[x] = V[y]
                 }
                 val shiftedBit = (V[x] and 0x01u)
@@ -158,7 +174,7 @@ class Cpu(
                 V[x] = result.toUByte()
             }
             0xE -> {
-                if (!inCommonMode) {
+                if (!system.has(Quirk.SHIFTING)) {
                     V[x] = V[y]
                 }
                 V[x] = (V[x].toInt() shl 1).toUByte()
@@ -178,7 +194,7 @@ class Cpu(
     }
 
     private fun jmpOff(operands: Operands) {
-        val plusHend = if (inCommonMode) V[0] else V[operands.x().toInt()]
+        val plusHend = if (system.has(Quirk.JUMPING)) V[operands.x().toInt()] else V[0]
         PC = operands.toInt() + plusHend.toInt()
     }
 
@@ -188,19 +204,25 @@ class Cpu(
     }
 
     private fun draw(operands: Operands) {
+        val x = V[operands.x().toInt()].toInt() % 64
+        val y = V[operands.y().toInt()].toInt() % 32
         val n = operands.n().toInt()
+        val shouldClip = system.has(Quirk.CLIPPING)
         V[0xF] = 0u
-        repeat(n) { row ->
-            val y = ((V[operands.y().toInt()] + row.toUByte()) % 32u).toInt()
+        for (row in 0 until n) {
+            val yCoordinate = if (shouldClip) { y + row } else { (y + row) % 32 }
+            if (yCoordinate >= 32 && shouldClip) break
             val sprite = memory[I + row]
+
             // 8 is the sprite's width
-            repeat(8) { col ->
-                val x = ((V[operands.x().toInt()] + col.toUByte()) % 64u).toInt()
+            for (col in 0 until 8) {
+                val xCoordinate = if (shouldClip) { x + col } else { (x + col) % 64 }
+                if (xCoordinate >= 64 && shouldClip) break
                 val spritePixelState = ((sprite.toInt() shr (7 - col)) and 1) == 1
-                val oldState = videoMemory[y][x]
+                val oldState = videoMemory[yCoordinate][xCoordinate]
                 val newState = oldState xor spritePixelState
                 V[0xF] = V[0xF] or (spritePixelState and oldState).toUByte()
-                videoMemory[y][x] = newState
+                videoMemory[yCoordinate][xCoordinate] = newState
             }
         }
         onDrawn?.invoke(videoMemory)
@@ -236,7 +258,7 @@ class Cpu(
             0x18 -> ST = V[x]
             0x1E -> {
                 val result = V[x].toInt() + I
-                if (inCommonMode && result > 0x0FFF) {
+                if (result > 0x0FFF) {
                     V[0xF] = 1u
                 }
                 I = result
@@ -249,30 +271,21 @@ class Cpu(
                 memory[I] = (hexNum / 100).toUByte()
                 memory[I + 1] = ((hexNum / 10) % 10).toUByte()
                 memory[I + 2] = ((hexNum % 100) % 10).toUByte()
-
             }
             0x55 -> {
-                if (inCommonMode) {
-                    for (i in 0..x) {
-                        memory[I + i] = V[i]
-                    }
-                } else {
-                    repeat(x) {
-                        memory[I] = V[I]
-                        I++
-                    }
+                for (i in 0..x) {
+                    memory[I + i] = V[i]
+                }
+                if (system.has(Quirk.MEMORY)) {
+                    I += x + 1
                 }
             }
             0x65 -> {
-                if (inCommonMode) {
-                    for (i in 0..x) {
-                        V[i] = memory[I + i]
-                    }
-                } else {
-                    repeat(x) {
-                        V[I] = memory[I]
-                        I++
-                    }
+                for (i in 0..x) {
+                    V[i] = memory[I + i]
+                }
+                if (system.has(Quirk.MEMORY)) {
+                    I += x + 1
                 }
             }
         }
@@ -298,4 +311,13 @@ class Cpu(
             Pair(0xFu, ::others)
         )
     }
+}
+
+enum class Quirk {
+    VF_RESET,
+    MEMORY,
+    DISPLAY_WAIT, // Not implemented
+    CLIPPING,
+    SHIFTING,
+    JUMPING
 }
