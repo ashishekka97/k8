@@ -139,6 +139,7 @@ class Chip8Impl(
         timerJob = scope.launch(Dispatchers.Default) {
             while (true) {
                 val delayInterval = ((1000 / speedFactor) / timerClockHz).roundToLong()
+                cpu.releaseInterrupts()
                 delay(delayInterval)
                 if (cpu.DT > 0u) {
                     cpu.DT--
@@ -231,6 +232,8 @@ class Chip8Impl(
     }
 }
 
+// TODO -> Quirks are to be separated from platform, and tied to individual games.
+//  More info here: https://github.com/chip-8/chip-8-database
 enum class System(val quirks: Set<Quirk>) {
     CHIP8(setOf(Quirk.VF_RESET, Quirk.MEMORY, Quirk.DISPLAY_WAIT, Quirk.CLIPPING)),
     SUPERCHIP(setOf(Quirk.CLIPPING, Quirk.SHIFTING, Quirk.JUMPING)),
