@@ -32,14 +32,25 @@ class Cpu(
 
     private val instructionSet: InstructionSet
 
+    private var interrupted = false
+
     init {
         instructionSet = loadInstructions()
     }
 
     fun tick() {
-        val (firstByte, secondByte) = fetch()
-        val operation = decode(firstByte)
-        operation?.execute(firstByte, secondByte)
+        val shouldRemainIdle = system.has(Quirk.DISPLAY_WAIT) && interrupted
+        if (!shouldRemainIdle) {
+            val (firstByte, secondByte) = fetch()
+            val operation = decode(firstByte)
+            operation?.execute(firstByte, secondByte)
+        }
+    }
+
+    fun releaseInterrupts() {
+        if (system.has(Quirk.DISPLAY_WAIT)) {
+            interrupted = false
+        }
     }
 
     fun reset() {
@@ -204,6 +215,9 @@ class Cpu(
     }
 
     private fun draw(operands: Operands) {
+        if (system.has(Quirk.DISPLAY_WAIT)) {
+            interrupted = true
+        }
         val x = V[operands.x().toInt()].toInt() % 64
         val y = V[operands.y().toInt()].toInt() % 32
         val n = operands.n().toInt()
