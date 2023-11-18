@@ -69,7 +69,7 @@ import org.w3c.files.FileReader.Companion.DONE
 import org.w3c.files.get
 
 fun main() {
-    val scope = CoroutineScope(Dispatchers.Unconfined)
+    val scope = CoroutineScope(Dispatchers.Default)
     val chip8 = Chip8Impl(scope)
     window.onkeydown = { handleKey(it, chip8) }
     window.onkeypress = { handleKey(it, chip8) }
@@ -283,8 +283,8 @@ fun main() {
                             theme.background.mapToCssColor()
                         }
 
-                        val width = CSSUnitValueTyped(1f, CSSUnit.vw)
-                        val height = CSSUnitValueTyped(1f, CSSUnit.vw)
+                        val width = CSSUnitValueTyped(0.5f, CSSUnit.vw)
+                        val height = CSSUnitValueTyped(0.5f, CSSUnit.vw)
                         Div({
                             style {
                                 backgroundColor(color)
@@ -357,18 +357,18 @@ fun KeyboardEvent.mapToChip8KeyPad(): Int {
 
 private fun columnTemplate(): String {
     val columnBuilder = StringBuilder()
-    for (i in 0 until 64) {
-        columnBuilder.append("1vw")
-        if (i < 63) columnBuilder.append(" ")
+    for (i in 0 until 128) {
+        columnBuilder.append("0.5vw")
+        if (i < 127) columnBuilder.append(" ")
     }
     return columnBuilder.toString()
 }
 
 private fun rowTemplate(): String {
     val rowBuilder = StringBuilder()
-    for (i in 0 until 32) {
-        rowBuilder.append("1vw")
-        if (i < 31) rowBuilder.append(" ")
+    for (i in 0 until 64) {
+        rowBuilder.append("0.5vw")
+        if (i < 63) rowBuilder.append(" ")
     }
     return rowBuilder.toString()
 }

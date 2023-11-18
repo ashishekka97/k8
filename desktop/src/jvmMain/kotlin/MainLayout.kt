@@ -40,7 +40,7 @@ fun Screen(videoMemory: VideoMemory) {
     val background = MaterialTheme.colors.background
     BoxWithConstraints {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val blockSize = size.width / 64
+            val blockSize = size.width / 128
             videoMemory.forEachIndexed { row, rowData ->
                 rowData.forEachIndexed { col, _ ->
                     val xx = blockSize * col.toFloat()

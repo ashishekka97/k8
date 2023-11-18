@@ -19,8 +19,8 @@ struct Screen: View {
         let pixelOnColor = Color(hex: theme.foreground)
         
         Canvas(rendersAsynchronously: true) { context, size in
-            let gridTileWidth: CGFloat = size.width / CGFloat(64)
-            let gridTileHeight: CGFloat = size.height / CGFloat(32)
+            let gridTileWidth: CGFloat = size.width / CGFloat(128)
+            let gridTileHeight: CGFloat = size.height / CGFloat(64)
             viewModel.vRam.indices.forEach { rowIndex in
                 viewModel.vRam[rowIndex].indices.forEach { colIndex in
                     let xx = CGFloat(colIndex) * gridTileWidth

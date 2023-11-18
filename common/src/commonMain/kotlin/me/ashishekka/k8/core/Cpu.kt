@@ -13,7 +13,7 @@ class Cpu(
     private val memory: Memory = Memory(4096) { 0u },
     private val videoMemory: VideoMemory = VideoMemory(64) { BooleanArray(128) },
     private val keypad: Keypad,
-    private val system: System = System.CHIP8,
+    private val system: System = System.SUPERCHIP_MODERN,
     private val onDrawn: ((VideoMemory) -> Unit)? = null
 ) {
     // Program counter, starts at 0x200
@@ -89,38 +89,38 @@ class Cpu(
 
     private fun zero(operands: Operands) {
         when (operands.toByteStore().toInt()) {
-            0xE0 -> cls(operands)
-            0xEE -> ret(operands)
-            0XFF -> hires(operands)
-            0xFE -> lowres(operands)
-            0xFB -> scrollright(operands)
-            0xFC -> scrollleft(operands)
+            0xE0 -> cls()
+            0xEE -> ret()
+            0XFF -> hires()
+            0xFE -> lowres()
+            0xFB -> scrollright()
+            0xFC -> scrollleft()
             else -> {
                 if (operands.y().toInt() == 0xC) {
                     scrolldown(operands)
                 } else {
-                    bin(operands)
+                    bin()
                 }
             }
         }
     }
 
-    private fun cls(operands: Operands) {
+    private fun cls() {
         videoMemory.clear()
     }
 
-    private fun ret(operands: Operands) {
+    private fun ret() {
         if (stack.isNotEmpty()) {
             PC = stack.removeLast().toInt()
         }
     }
 
-    private fun hires(operands: Operands) {
+    private fun hires() {
         resolution = HIGH
         videoMemory.clear()
     }
 
-    private fun lowres(operands: Operands) {
+    private fun lowres() {
         resolution = LOW
         videoMemory.clear()
     }
@@ -137,7 +137,7 @@ class Cpu(
         }
     }
 
-    private fun scrollright(operands: Operands) {
+    private fun scrollright() {
         for (row in videoMemory.indices) {
             for (col in videoMemory[row].lastIndex downTo 0) {
                 if (col >= 4) {
@@ -149,7 +149,7 @@ class Cpu(
         }
     }
 
-    private fun scrollleft(operands: Operands) {
+    private fun scrollleft() {
         for (row in videoMemory.indices) {
             for (col in 0..videoMemory[row].lastIndex) {
                 if (col <= videoMemory[row].lastIndex - 4) {
@@ -161,7 +161,7 @@ class Cpu(
         }
     }
 
-    private fun bin(operands: Operands) {
+    private fun bin() {
         // Execute machine code. No need to emulate for now.
         PC -= 2
     }
