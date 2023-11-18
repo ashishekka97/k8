@@ -56,7 +56,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
-import java.util.Locale
+import java.util.*
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import me.ashishekka.k8.android.theming.fullScaffoldBackground
@@ -218,20 +218,20 @@ fun MainLayout(
             }
         }
     ) {
-        PlaySound(toneGenerator, soundState.value)
+        PlaySound(toneGenerator) { soundState.value }
         Column(
             modifier = Modifier.fillMaxHeight().padding(it),
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row { Screen(videoMemory.value) }
-            Row { Keypad(hapticsState, onGameKeyDown, onGameKeyUp) }
+            Row { Screen { videoMemory.value } }
+            Row { Keypad({ hapticsState.value }, onGameKeyDown, onGameKeyUp) }
         }
     }
 }
 
 @Composable
-fun Screen(videoMemory: VideoMemory) {
+fun Screen(videoMemoryProvider: () -> VideoMemory) {
     val pixelOffColor = MaterialTheme.colors.background
     val pixelOnColor = MaterialTheme.colors.primary
     BoxWithConstraints(
@@ -240,7 +240,8 @@ fun Screen(videoMemory: VideoMemory) {
         ).padding(4.dp)
     ) {
         Canvas(modifier = Modifier.size(width = 320.dp, height = 160.dp)) {
-            val blockSize = size.width / 64
+            val blockSize = size.width / 128
+            val videoMemory = videoMemoryProvider()
             videoMemory.forEachIndexed { row, rowData ->
                 rowData.forEachIndexed { col, _ ->
                     val xx = blockSize * col.toFloat()
@@ -254,14 +255,14 @@ fun Screen(videoMemory: VideoMemory) {
 }
 
 @Composable
-fun Keypad(hapticsState: State<Boolean>, onKeyDown: (Int) -> Unit, onKeyUp: (Int) -> Unit) {
+fun Keypad(hapticsStateProvider: () -> Boolean, onKeyDown: (Int) -> Unit, onKeyUp: (Int) -> Unit) {
     val keys = listOf(1, 2, 3, 12, 4, 5, 6, 13, 7, 8, 9, 14, 10, 0, 11, 15)
     LazyVerticalGrid(
         columns = GridCells.Fixed(4),
         modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 16.dp)
     ) {
         items(keys) { key ->
-            Key(key, hapticsState, onKeyDown, onKeyUp)
+            Key(key, hapticsStateProvider, onKeyDown, onKeyUp)
         }
     }
 }
@@ -269,7 +270,7 @@ fun Keypad(hapticsState: State<Boolean>, onKeyDown: (Int) -> Unit, onKeyUp: (Int
 @Composable
 fun Key(
     number: Int,
-    hapticsState: State<Boolean>,
+    hapticsStateProvider: () -> Boolean,
     onKeyDown: (Int) -> Unit,
     onKeyUp: (Int) -> Unit
 ) {
@@ -279,7 +280,7 @@ fun Key(
         interactionSource.interactions.collectLatest { interaction ->
             when (interaction) {
                 is PressInteraction.Press -> {
-                    if (hapticsState.value) {
+                    if (hapticsStateProvider()) {
                         hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                     }
                     onKeyDown(number)
@@ -307,6 +308,6 @@ fun Key(
 }
 
 @Composable
-fun PlaySound(toneGenerator: ToneGenerator, play: Boolean) {
-    if (play) toneGenerator.startTone(ToneGenerator.TONE_SUP_RADIO_ACK)
+fun PlaySound(toneGenerator: ToneGenerator, playStateProvider: () -> Boolean) {
+    if (playStateProvider()) toneGenerator.startTone(ToneGenerator.TONE_SUP_RADIO_ACK)
 }

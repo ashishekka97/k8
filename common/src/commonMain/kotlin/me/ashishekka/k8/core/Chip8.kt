@@ -82,7 +82,7 @@ class Chip8Impl(
 
     constructor() : this(scope = CoroutineScope(SupervisorJob() + Dispatchers.Default))
 
-    private val cpuClockHz: Long = 1000
+    private val cpuClockHz: Long = 960
     private var speedFactor: Float = 1.0f
     private var soundEnabled: Boolean = true
     private val timerClockHz: Long = 60
@@ -93,11 +93,11 @@ class Chip8Impl(
     private val atomicSoundUpdate: AtomicBoolean = atomic(false)
 
     private val memory = Memory(4096) { 0u }
-    private val videoMemory = VideoMemory(32) { BooleanArray(64) }
+    private val videoMemory = VideoMemory(64) { BooleanArray(128) }
     private val cpu: Cpu
 
     private val videoMemoryState =
-        mutableStateOf(VideoMemory(32) { BooleanArray(64) }, neverEqualPolicy())
+        mutableStateOf(VideoMemory(64) { BooleanArray(128) }, neverEqualPolicy())
     private val soundState = mutableStateOf(false, neverEqualPolicy())
 
     private val keypad = KeypadImpl()
@@ -130,7 +130,7 @@ class Chip8Impl(
     override fun start() {
         cpuClockJob = scope.launch(Dispatchers.Default) {
             while (true) {
-                val delayInterval = ((1000 / speedFactor) / cpuClockHz).roundToLong()
+                val delayInterval = ((960 / speedFactor) / cpuClockHz).roundToLong()
                 delay(delayInterval)
                 if (!isPaused) cpu.tick()
             }
@@ -138,7 +138,7 @@ class Chip8Impl(
 
         timerJob = scope.launch(Dispatchers.Default) {
             while (true) {
-                val delayInterval = ((1000 / speedFactor) / timerClockHz).roundToLong()
+                val delayInterval = ((960 / speedFactor) / timerClockHz).roundToLong()
                 cpu.releaseInterrupts()
                 delay(delayInterval)
                 if (cpu.DT > 0u) {
@@ -180,7 +180,7 @@ class Chip8Impl(
             while (true) {
                 if (atomicScreenUpdate.value) {
                     emit(videoMemory)
-                    atomicScreenUpdate.compareAndSet(true, false)
+                    atomicScreenUpdate.compareAndSet(expect = true, update = false)
                 } else {
                     delay(16)
                 }
@@ -236,7 +236,8 @@ class Chip8Impl(
 //  More info here: https://github.com/chip-8/chip-8-database
 enum class System(val quirks: Set<Quirk>) {
     CHIP8(setOf(Quirk.VF_RESET, Quirk.MEMORY, Quirk.DISPLAY_WAIT, Quirk.CLIPPING)),
-    SUPERCHIP(setOf(Quirk.CLIPPING, Quirk.SHIFTING, Quirk.JUMPING)),
+    SUPERCHIP_LEGACY(setOf(Quirk.DISPLAY_WAIT, Quirk.CLIPPING, Quirk.SHIFTING, Quirk.JUMPING)),
+    SUPERCHIP_MODERN(setOf(Quirk.CLIPPING, Quirk.SHIFTING, Quirk.JUMPING)),
     XOCHIP(setOf(Quirk.MEMORY));
 
     fun has(quirk: Quirk): Boolean {

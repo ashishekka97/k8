@@ -1,15 +1,19 @@
 package me.ashishekka.k8.core
 
 import kotlin.random.Random
+import me.ashishekka.k8.core.Resolution.HIGH
+import me.ashishekka.k8.core.Resolution.LOW
 
 const val PC_START = 0x200
 const val FONT_START = 0x000
+const val HI_RES_SPRITE_WIDTH = 16
+const val LO_RES_SPRITE_WIDTH = 8
 
 class Cpu(
     private val memory: Memory = Memory(4096) { 0u },
-    private val videoMemory: VideoMemory = VideoMemory(32) { BooleanArray(64) },
+    private val videoMemory: VideoMemory = VideoMemory(64) { BooleanArray(128) },
     private val keypad: Keypad,
-    private val system: System = System.CHIP8,
+    private val system: System = System.SUPERCHIP_MODERN,
     private val onDrawn: ((VideoMemory) -> Unit)? = null
 ) {
     // Program counter, starts at 0x200
@@ -34,6 +38,8 @@ class Cpu(
 
     private var interrupted = false
 
+    private var resolution: Resolution = LOW
+
     init {
         instructionSet = loadInstructions()
     }
@@ -44,6 +50,7 @@ class Cpu(
             val (firstByte, secondByte) = fetch()
             val operation = decode(firstByte)
             operation?.execute(firstByte, secondByte)
+            onDrawn?.invoke(videoMemory)
         }
     }
 
@@ -59,6 +66,8 @@ class Cpu(
         stack.clear()
         DT = 0u
         ST = 0u
+        resolution = LOW
+        interrupted = false
         V.forEachIndexed { index, _ -> V[index] = 0u }
     }
 
@@ -80,24 +89,79 @@ class Cpu(
 
     private fun zero(operands: Operands) {
         when (operands.toByteStore().toInt()) {
-            0xE0 -> cls(operands)
-            0xEE -> ret(operands)
-            else -> bin(operands)
+            0xE0 -> cls()
+            0xEE -> ret()
+            0XFF -> hires()
+            0xFE -> lowres()
+            0xFB -> scrollright()
+            0xFC -> scrollleft()
+            else -> {
+                if (operands.y().toInt() == 0xC) {
+                    scrolldown(operands)
+                } else {
+                    bin()
+                }
+            }
         }
     }
 
-    private fun cls(operands: Operands) {
+    private fun cls() {
         videoMemory.clear()
-        onDrawn?.invoke(videoMemory)
     }
 
-    private fun ret(operands: Operands) {
+    private fun ret() {
         if (stack.isNotEmpty()) {
             PC = stack.removeLast().toInt()
         }
     }
 
-    private fun bin(operands: Operands) {
+    private fun hires() {
+        resolution = HIGH
+        videoMemory.clear()
+    }
+
+    private fun lowres() {
+        resolution = LOW
+        videoMemory.clear()
+    }
+
+    private fun scrolldown(operands: Operands) {
+        val n = operands.n().toInt()
+        // Scroll down by n rows. This leaves top n rows with old data
+        for (row in (videoMemory.lastIndex - n) downTo -n) {
+            if (row >= 0) {
+                videoMemory.setRow(row + n, videoMemory.getRow(row, resolution), resolution)
+            } else {
+                videoMemory.setRow(row, BooleanArray(128), resolution)
+            }
+        }
+    }
+
+    private fun scrollright() {
+        for (row in videoMemory.indices) {
+            for (col in videoMemory[row].lastIndex downTo 0) {
+                if (col >= 4) {
+                    videoMemory.set(col, row, videoMemory.get(col - 4, row, resolution), resolution)
+                } else {
+                    videoMemory.set(col, row, false, resolution)
+                }
+            }
+        }
+    }
+
+    private fun scrollleft() {
+        for (row in videoMemory.indices) {
+            for (col in 0..videoMemory[row].lastIndex) {
+                if (col <= videoMemory[row].lastIndex - 4) {
+                    videoMemory.set(col, row, videoMemory.get(col + 4, row, resolution), resolution)
+                } else {
+                    videoMemory.set(col, row, false, resolution)
+                }
+            }
+        }
+    }
+
+    private fun bin() {
         // Execute machine code. No need to emulate for now.
         PC -= 2
     }
@@ -149,28 +213,33 @@ class Cpu(
                     V[0xF] = 0u
                 }
             }
+
             0x2 -> {
                 V[x] = V[x] and V[y]
                 if (system.has(Quirk.VF_RESET)) {
                     V[0xF] = 0u
                 }
             }
+
             0x3 -> {
                 V[x] = V[x] xor V[y]
                 if (system.has(Quirk.VF_RESET)) {
                     V[0xF] = 0u
                 }
             }
+
             0x4 -> {
                 val result = V[x].toInt() + V[y].toInt()
-                V[0xF] = if (result > 0xFF) 1u else 0u
                 V[x] = result.toUByte()
+                V[0xF] = if (result > 0xFF) 1u else 0u
             }
+
             0x5 -> {
                 val result = V[x].toInt() - V[y].toInt()
-                V[0xF] = if (result < 0) 0u else 1u
                 V[x] = result.toUByte()
+                V[0xF] = if (result < 0) 0u else 1u
             }
+
             0x6 -> {
                 if (!system.has(Quirk.SHIFTING)) {
                     V[x] = V[y]
@@ -179,17 +248,20 @@ class Cpu(
                 V[x] = (V[x].toInt() shr 1).toUByte()
                 V[0xF] = shiftedBit
             }
+
             0x7 -> {
                 val result = V[y].toInt() - V[x].toInt()
-                V[0xF] = if (result < 0) 0u else 1u
                 V[x] = result.toUByte()
+                V[0xF] = if (result < 0) 0u else 1u
             }
+
             0xE -> {
                 if (!system.has(Quirk.SHIFTING)) {
                     V[x] = V[y]
                 }
+                val shiftedBit = (V[x].toInt() shr 7).toUByte()
                 V[x] = (V[x].toInt() shl 1).toUByte()
-                V[0xF] = (V[x].toInt() shr 7).toUByte()
+                V[0xF] = shiftedBit
             }
         }
     }
@@ -215,31 +287,49 @@ class Cpu(
     }
 
     private fun draw(operands: Operands) {
-        if (system.has(Quirk.DISPLAY_WAIT)) {
-            interrupted = true
+        val shouldInterrupt = when (system) {
+            System.CHIP8 -> system.has(Quirk.DISPLAY_WAIT)
+            System.SUPERCHIP_LEGACY -> system.has(Quirk.DISPLAY_WAIT) && resolution == LOW
+            else -> false
         }
-        val x = V[operands.x().toInt()].toInt() % 64
-        val y = V[operands.y().toInt()].toInt() % 32
+        interrupted = shouldInterrupt
+
+        val x = V[operands.x().toInt()].toInt() % resolution.width
+        val y = V[operands.y().toInt()].toInt() % resolution.height
         val n = operands.n().toInt()
         val shouldClip = system.has(Quirk.CLIPPING)
         V[0xF] = 0u
-        for (row in 0 until n) {
-            val yCoordinate = if (shouldClip) { y + row } else { (y + row) % 32 }
-            if (yCoordinate >= 32 && shouldClip) break
-            val sprite = memory[I + row]
 
-            // 8 is the sprite's width
-            for (col in 0 until 8) {
-                val xCoordinate = if (shouldClip) { x + col } else { (x + col) % 64 }
-                if (xCoordinate >= 64 && shouldClip) break
-                val spritePixelState = ((sprite.toInt() shr (7 - col)) and 1) == 1
-                val oldState = videoMemory[yCoordinate][xCoordinate]
-                val newState = oldState xor spritePixelState
-                V[0xF] = V[0xF] or (spritePixelState and oldState).toUByte()
-                videoMemory[yCoordinate][xCoordinate] = newState
+        val spriteHeight = if (n == 0) 16 else n
+        var memoryIndex = 0
+        for (row in 0 until spriteHeight) {
+            val yy = if (shouldClip) y + row else (y + row) % resolution.height
+            if (yy >= resolution.height && shouldClip) break
+
+            val spriteWidth = if (spriteHeight != 16) LO_RES_SPRITE_WIDTH else HI_RES_SPRITE_WIDTH
+            val spriteRow = when (spriteHeight) {
+                16 -> (memory[I + memoryIndex].toInt() shl 8) or memory[I + memoryIndex + 1].toInt()
+                else -> memory[I + memoryIndex].toInt()
             }
+            for (col in 0 until spriteWidth) {
+                val xx = if (shouldClip) x + col else (x + col) % resolution.width
+                if (xx >= resolution.width && shouldClip) break
+                val spritePixelState = ((spriteRow shr (spriteWidth - col - 1)) and 1) == 1
+                val oldState = videoMemory.get(xx, yy, resolution)
+                val newState = oldState xor spritePixelState
+
+                // Set VF
+                val collision = (spritePixelState and oldState).toUByte()
+                val clipping = ((yy > resolution.height) or (xx > resolution.width)).toUByte()
+                V[0XF] = when (resolution) {
+                    LOW -> V[0XF] or collision
+                    HIGH -> (V[0xF] + (collision or clipping)).toUByte()
+                }
+
+                videoMemory.set(xx, yy, newState, resolution)
+            }
+            memoryIndex += spriteWidth / 8
         }
-        onDrawn?.invoke(videoMemory)
     }
 
     private fun skipKey(operands: Operands) {
@@ -268,6 +358,7 @@ class Cpu(
                     PC -= 2
                 }
             }
+
             0x15 -> DT = V[x]
             0x18 -> ST = V[x]
             0x1E -> {
@@ -277,15 +368,22 @@ class Cpu(
                 }
                 I = result
             }
+
             0x29 -> {
                 I = (V[x].toInt() * 5)
             }
+
+            0x30 -> {
+                I = (V[x].toInt() * 10) + 80
+            }
+
             0x33 -> {
                 val hexNum = V[x].toInt()
                 memory[I] = (hexNum / 100).toUByte()
                 memory[I + 1] = ((hexNum / 10) % 10).toUByte()
                 memory[I + 2] = ((hexNum % 100) % 10).toUByte()
             }
+
             0x55 -> {
                 for (i in 0..x) {
                     memory[I + i] = V[i]
@@ -294,6 +392,7 @@ class Cpu(
                     I += x + 1
                 }
             }
+
             0x65 -> {
                 for (i in 0..x) {
                     V[i] = memory[I + i]
@@ -334,4 +433,9 @@ enum class Quirk {
     CLIPPING,
     SHIFTING,
     JUMPING
+}
+
+enum class Resolution(val width: Int, val height: Int) {
+    LOW(64, 32),
+    HIGH(128, 64)
 }
